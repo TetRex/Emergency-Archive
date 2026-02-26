@@ -1,6 +1,7 @@
-# ⚠️ Emergency Hub
+# ⚠️ Emergency Archive
 
 A fully offline-capable emergency preparedness Progressive Web App (PWA). Once loaded, it works without any internet connection — maps, AI chat, voice input, and all scenario guides run entirely on-device.
+This project was completed as part of the course "Browser Programming" at the Savonia University of Applied Sciences.
 
 ---
 
@@ -39,16 +40,6 @@ Each guide is presented as a numbered checklist — tap a step to mark it comple
 - Streams responses in real time with lightweight Markdown rendering.
 - Responses are scoped to emergency preparedness, first aid, and survival topics.
 
-### 🎤 Offline Voice Input (Whisper)
-- Voice-to-text for the AI chat input, powered by [`Xenova/whisper-tiny.en`](https://huggingface.co/Xenova/whisper-tiny.en) via [Transformers.js](https://github.com/xenova/transformers.js).
-- Runs entirely in a Web Worker — audio is processed **on-device**, no data is sent anywhere.
-- Model (~75 MB) downloads once and is cached in the browser's IndexedDB.
-
-### 📶 PWA / Offline Support
-- A Service Worker pre-caches the app shell (HTML, CSS, JS, Leaflet assets) on first load.
-- The app runs fully offline once cached. The `finland.pmtiles` file is served directly from disk and is never cached by the service worker.
-- An "Offline" badge is shown when network connectivity is lost.
-
 ---
 
 ## File Structure
@@ -64,45 +55,6 @@ Each guide is presented as a numbered checklist — tap a step to mark it comple
 
 ---
 
-## Getting Started
-
-### 1. Serve the app
-
-The app must be served over HTTP (not opened as a `file://` URL) for the Service Worker and microphone APIs to work.
-
-```bash
-# Python 3
-python3 -m http.server 8080
-
-# Node.js (npx)
-npx serve .
-```
-
-Then open `http://localhost:8080` in your browser.
-
-### 2. (Optional) Set up Ollama for AI Chat
-
-Install [Ollama](https://ollama.com/) and pull a model:
-
-```bash
-ollama pull llama3
-ollama serve
-```
-
-The AI Chat page will auto-detect running models. Without Ollama, the map, scenarios, timers, and voice input all still work.
-
----
-
-## Browser Requirements
-
-| Feature | Requirement |
-|---|---|
-| Map & PWA | Any modern browser (Chrome, Firefox, Safari) |
-| Voice input | Microphone permission + `MediaRecorder` API |
-| AI Chat | Ollama running locally on port `11434` |
-| Offline map | `finland.pmtiles` present in the project root |
-
----
 
 ## Data & Privacy
 
