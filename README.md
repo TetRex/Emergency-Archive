@@ -8,15 +8,15 @@ A fully offline-capable emergency preparedness Progressive Web App (PWA). Once l
 
 | Scenarios | Timers |
 |:---:|:---:|
-| ![Scenarios](screenshots/Screenshot%202026-02-26%20at%2015.35.03.png) | ![Timers](screenshots/Screenshot%202026-02-26%20at%2015.35.57.png) |
+| ![Scenarios](docs/Screenshot%202026-02-26%20at%2015.35.03.png) | ![Timers](docs/Screenshot%202026-02-26%20at%2015.35.57.png) |
 
 | AI Chat | Offline Map |
 |:---:|:---:|
-| ![AI Chat](screenshots/Screenshot%202026-02-26%20at%2015.37.07.png) | ![Offline Map](screenshots/Screenshot%202026-02-26%20at%2015.39.50.png) |
+| ![AI Chat](docs/Screenshot%202026-02-26%20at%2015.37.07.png) | ![Offline Map](docs/Screenshot%202026-02-26%20at%2015.39.50.png) |
 
 | Home Dashboard |
 |:---:|
-| ![Home dashboard](screenshots/Screenshot%202026-02-26%20at%2015.40.09.png) |
+| ![Home dashboard](docs/Screenshot%202026-02-26%20at%2015.40.09.png) |
 
 ---
 
