@@ -1,7 +1,6 @@
 # ⚠️ Emergency Archive
-
-A fully offline-capable emergency preparedness Progressive Web App (PWA). Once loaded, it works without any internet connection — maps, AI chat, voice input, and all scenario guides run entirely on-device.
 This project was completed as part of the course "Browser Programming" at the Savonia University of Applied Sciences.
+A fully offline-capable emergency preparedness Progressive Web App (PWA). Once loaded, it works without any internet connection — maps, AI chat, voice input, and all scenario guides run entirely on-device.
 
 ---
 
