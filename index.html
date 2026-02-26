@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Emergency Hub</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ==================== PAGES ==================== -->
+
+  <!-- HOME PAGE -->
+  <section id="page-home" class="page active">
+    <header class="page-header">
+      <h1>&#9888; Emergency Hub</h1>
+      <span class="subtitle">Dashboard</span>
+    </header>
+
+    <div class="home-grid">
+      <!-- Active Timers Card -->
+      <div class="card" id="home-timers-card">
+        <h2>&#9201; Active Timers</h2>
+        <div id="home-timers-list" class="home-list">
+          <p class="empty-msg">No active timers</p>
+        </div>
+        <button class="card-link-btn" data-nav="page-timers">Go to Timers &rarr;</button>
+      </div>
+
+      <!-- Points of Interest Card -->
+      <div class="card" id="home-poi-card">
+        <h2>&#128205; Points of Interest</h2>
+        <div id="home-poi-list" class="home-list">
+          <p class="empty-msg">No points of interest</p>
+        </div>
+        <button class="card-link-btn" data-nav="page-map">Go to Map &rarr;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP PAGE -->
+  <section id="page-map" class="page">
+    <header class="page-header">
+      <h1>&#128506; Map</h1>
+      <span class="subtitle">Tap the map to add a point of interest</span>
+    </header>
+    <div id="map-row">
+      <div id="map-container">
+        <div id="map"></div>
+        <div class="map-offline-tag">&#9632; Finland &mdash; Offline</div>
+      </div>
+      <!-- POI sidebar -->
+      <aside id="poi-sidebar">
+        <div class="locate-btn-wrap">
+          <button id="locate-btn" class="locate-btn" title="Show my location">&#127919; My Location</button>
+        </div>
+        <h3>Points of Interest</h3>
+        <ul id="poi-list"></ul>
+      </aside>
+    </div>
+
+    <!-- Add-POI modal -->
+    <div id="poi-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Add Point of Interest</h3>
+        <label>Name
+          <input type="text" id="poi-name" placeholder="e.g. Water source" autocomplete="off" />
+        </label>
+        <label>Category
+          <select id="poi-category">
+            <option value="shelter">&#127968; Shelter</option>
+            <option value="water">&#128167; Water</option>
+            <option value="medical">&#9877; Medical</option>
+            <option value="danger">&#9888; Danger Zone</option>
+            <option value="food">&#127830; Food</option>
+            <option value="other">&#128204; Other</option>
+          </select>
+        </label>
+        <div class="modal-actions">
+          <button id="poi-save-btn" class="btn-primary">Save</button>
+          <button id="poi-cancel-btn" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCENARIOS PAGE -->
+  <section id="page-scenarios" class="page">
+    <header class="page-header">
+      <h1>&#9888; Emergency Scenarios</h1>
+      <span class="subtitle">Step-by-step guides</span>
+    </header>
+
+    <div class="scenario-categories" id="scenario-categories">
+      <!-- Rendered by JS -->
+    </div>
+
+    <!-- Expanded scenario view -->
+    <div id="scenario-detail" class="scenario-detail hidden">
+      <button id="scenario-back-btn" class="btn-secondary">&larr; Back</button>
+      <div id="scenario-detail-content"></div>
+    </div>
+  </section>
+
+  <!-- TIMERS PAGE -->
+  <section id="page-timers" class="page">
+    <header class="page-header">
+      <h1>&#9201; Timers</h1>
+      <span class="subtitle">Manage countdown &amp; stopwatch timers</span>
+    </header>
+
+    <div class="timers-toolbar">
+      <button id="add-countdown-btn" class="btn-primary">+ Countdown</button>
+      <button id="add-stopwatch-btn" class="btn-primary">+ Stopwatch</button>
+    </div>
+
+    <div id="timers-grid" class="timers-grid">
+      <p class="empty-msg" id="timers-empty">Tap a button above to create a timer</p>
+    </div>
+
+    <!-- Countdown setup modal -->
+    <div id="countdown-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>New Countdown</h3>
+        <label>Label
+          <input type="text" id="cd-label" placeholder="e.g. Rescue ETA" autocomplete="off" />
+        </label>
+        <div class="time-inputs">
+          <label>H <input type="number" id="cd-hours" min="0" max="99" value="0" /></label>
+          <label>M <input type="number" id="cd-minutes" min="0" max="59" value="5" /></label>
+          <label>S <input type="number" id="cd-seconds" min="0" max="59" value="0" /></label>
+        </div>
+        <div class="modal-actions">
+          <button id="cd-save-btn" class="btn-primary">Start</button>
+          <button id="cd-cancel-btn" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI CHAT PAGE -->
+  <section id="page-chat" class="page">
+    <header class="page-header chat-page-header">
+      <h1>&#129302; AI Assistant</h1>
+      <div class="chat-model-row">
+        <select id="chat-model-select" class="chat-model-select">
+          <option value="">Loading models…</option>
+        </select>
+        <span id="chat-status" class="chat-status chat-status--offline">&#9679; Offline</span>
+      </div>
+    </header>
+
+    <div id="chat-messages" class="chat-messages">
+      <div class="chat-bubble chat-bubble--assistant">
+        <p>Hi! I'm your offline emergency assistant. Ask me anything about first aid, survival, or emergency procedures.</p>
+      </div>
+    </div>
+
+    <div class="chat-input-bar">
+      <button id="chat-clear-btn" class="chat-clear-btn" title="Clear chat">&#128465;</button>
+      <textarea id="chat-input" class="chat-input" rows="1" placeholder="Ask a question…"></textarea>
+      <button id="chat-mic-btn" class="chat-mic-btn" title="Voice input">&#127908;</button>
+      <button id="chat-send-btn" class="chat-send-btn" title="Send">&#10148;</button>
+    </div>
+  </section>
+
+  <!-- ==================== BOTTOM NAV BAR ==================== -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-target="page-home">
+      <span class="nav-icon">&#127968;</span>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-btn" data-target="page-map">
+      <span class="nav-icon">&#128506;</span>
+      <span class="nav-label">Map</span>
+    </button>
+    <button class="nav-btn" data-target="page-scenarios">
+      <span class="nav-icon">&#128211;</span>
+      <span class="nav-label">Scenarios</span>
+    </button>
+    <button class="nav-btn" data-target="page-timers">
+      <span class="nav-icon">&#9201;</span>
+      <span class="nav-label">Timers</span>
+    </button>
+    <button class="nav-btn" data-target="page-chat">
+      <span class="nav-icon">&#129302;</span>
+      <span class="nav-label">AI Chat</span>
+    </button>
+  </nav>
+
+  <!-- Offline indicator -->
+  <div id="offline-badge" class="offline-badge hidden">&#9889; Offline</div>
+
+  <!-- JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/protomaps-leaflet@5.0.0/dist/protomaps-leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

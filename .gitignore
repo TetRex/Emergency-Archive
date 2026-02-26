@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Editor directories
+.vscode/
+.idea/
+
+finland.pmtiles
