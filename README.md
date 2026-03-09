@@ -72,21 +72,9 @@ Each guide is presented as a numbered checklist — tap a step to mark it comple
 
 ## Getting Started
 
-### 1. Serve the app
 
-The app must be served over HTTP (not opened as a `file://` URL) for the Service Worker and microphone APIs to work.
 
-```bash
-# Python 3
-python3 -m http.server 8080
-
-# Node.js
-npx serve .
-```
-
-Then open `http://localhost:8080` in your browser.
-
-### 2. Install Ollama (for AI Chat)
+### 1. Install Ollama (for AI Chat)
 
 Ollama runs large language models locally. The AI Chat feature requires it.
 
@@ -110,7 +98,7 @@ Download and run the installer from [ollama.com/download](https://ollama.com/dow
 
 ---
 
-### 3. Pull a model and start the server
+### 2. Pull a model and start the server
 
 ```bash
 # Pull a model (llama3.2 is a good default; ~2 GB)
