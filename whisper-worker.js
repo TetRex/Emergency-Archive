@@ -1,17 +1,19 @@
 // Offline speech-to-text worker using Whisper via transformers.js
 // Audio is processed entirely on-device — no network required after first model download.
-importScripts("https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js");
+importScripts("./transformers.min.js");
 
-// Cache the model in the browser (IndexedDB) so it only downloads once.
-self.transformers.env.allowLocalModels  = false;
-self.transformers.env.useBrowserCache   = true;
+// Use locally bundled model files — no network needed after first app load.
+self.transformers.env.allowLocalModels  = true;
+self.transformers.env.allowRemoteModels = false;
+self.transformers.env.localModelPath    = "./models/";
+self.transformers.env.useBrowserCache   = false;
 
 let transcriber = null;
 
 self.onmessage = async ({ data }) => {
   if (data.type === "load") {
     try {
-      self.postMessage({ type: "status", msg: "Downloading speech model (first time only, ~75 MB)…" });
+      self.postMessage({ type: "status", msg: "Loading speech model…" });
       transcriber = await self.transformers.pipeline(
         "automatic-speech-recognition",
         "Xenova/whisper-tiny.en",

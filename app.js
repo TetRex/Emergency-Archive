@@ -870,10 +870,30 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   function initWhisperWorker() {
     if (whisperWorker) return;
     whisperWorker = new Worker("./whisper-worker.js");
+
+    let loadTimeout = setTimeout(() => {
+      if (!whisperReady) {
+        whisperWorker.terminate();
+        whisperWorker = null;
+        pendingAudio = null;
+        micReset();
+        chatAppend("assistant", "Speech model failed to load (timed out). Check your internet connection — the model (~75 MB) must download once.", true);
+      }
+    }, 90000);
+
+    whisperWorker.onerror = (e) => {
+      clearTimeout(loadTimeout);
+      whisperWorker = null;
+      pendingAudio = null;
+      micReset();
+      chatAppend("assistant", `Voice input unavailable: ${e.message || "worker error"}. Try refreshing.`, true);
+    };
+
     whisperWorker.onmessage = ({ data }) => {
       if (data.type === "status") {
         micSetStatus(data.msg, data.msg);
       } else if (data.type === "ready") {
+        clearTimeout(loadTimeout);
         whisperReady = true;
         micSetStatus("Ask a question…", "Voice input (offline)");
         if (pendingAudio) {
@@ -890,6 +910,7 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
           chatInput.style.height = chatInput.scrollHeight + "px";
         }
       } else if (data.type === "error") {
+        clearTimeout(loadTimeout);
         micReset();
         chatAppend("assistant", `Transcription error: ${data.msg}`, true);
       }
