@@ -216,15 +216,29 @@
   }
 
   function renderPoiList() {
-    poiListEl.innerHTML = "";
+    const emptyState = $("#poi-empty-state");
+    const countBadge = $("#poi-count-badge");
+    // Remove existing poi items (but keep the empty state element)
+    poiListEl.querySelectorAll("li:not(#poi-empty-state)").forEach(el => el.remove());
+
+    if (state.pois.length === 0) {
+      if (emptyState) emptyState.style.display = "";
+      if (countBadge) countBadge.textContent = "0";
+      return;
+    }
+    if (emptyState) emptyState.style.display = "none";
+    if (countBadge) countBadge.textContent = state.pois.length;
+
     state.pois.forEach(poi => {
       const li = document.createElement("li");
+      li.className = `poi-cat-${poi.category}`;
       li.innerHTML = `
+        <span class="poi-icon-pill">${categoryIcons[poi.category] || "📌"}</span>
         <div class="poi-info">
-          <div class="poi-name">${categoryIcons[poi.category] || "📌"} ${poi.name}</div>
-          <div class="poi-cat">${poi.category} · ${poi.lat.toFixed(4)}, ${poi.lng.toFixed(4)}</div>
+          <div class="poi-name">${poi.name}</div>
+          <div class="poi-cat">${poi.category} &middot; ${poi.lat.toFixed(4)}, ${poi.lng.toFixed(4)}</div>
         </div>
-        <button class="poi-remove-btn" data-id="${poi.id}">Remove</button>
+        <button class="poi-remove-btn" data-id="${poi.id}" title="Remove">&#10005;</button>
       `;
       poiListEl.appendChild(li);
     });

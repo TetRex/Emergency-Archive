@@ -2,11 +2,13 @@
 // Audio is processed entirely on-device — no network required after first model download.
 importScripts("./transformers.min.js");
 
-// Use locally bundled model files — no network needed after first app load.
+// Use locally bundled model and runtime files — fully offline.
 self.transformers.env.allowLocalModels  = true;
 self.transformers.env.allowRemoteModels = false;
 self.transformers.env.localModelPath    = "./models/";
 self.transformers.env.useBrowserCache   = false;
+// Point ONNX runtime to local WASM files instead of CDN.
+self.transformers.env.backends.onnx.wasm.wasmPaths = "./";
 
 let transcriber = null;
 

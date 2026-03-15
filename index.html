@@ -42,20 +42,26 @@
   <section id="page-map" class="page">
     <header class="page-header">
       <h1>&#128204; Map</h1>
-      <span class="subtitle">Tap the map to add a point of interest</span>
+      <span class="map-hint-chip">&#43; Tap map to pin</span>
     </header>
     <div id="map-row">
       <div id="map-container">
         <div id="map"></div>
         <div class="map-offline-tag">&#9632; Finland &mdash; Offline</div>
+        <button id="locate-btn" class="locate-fab" title="Show my location">&#127919;</button>
       </div>
       <!-- POI sidebar -->
       <aside id="poi-sidebar">
-        <div class="locate-btn-wrap">
-          <button id="locate-btn" class="locate-btn" title="Show my location">&#127919; My Location</button>
+        <div class="poi-sidebar-header">
+          <span class="poi-sidebar-title">Points of Interest</span>
+          <span id="poi-count-badge" class="poi-count-badge">0</span>
         </div>
-        <h3>Points of Interest</h3>
-        <ul id="poi-list"></ul>
+        <ul id="poi-list">
+          <li class="poi-empty-state" id="poi-empty-state">
+            <span class="poi-empty-icon">&#128204;</span>
+            <span>Tap the map to add a point</span>
+          </li>
+        </ul>
       </aside>
     </div>
 
