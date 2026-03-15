@@ -862,13 +862,16 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
   chatSendBtn.addEventListener("click", chatSend);
 
-  // ── Offline voice input (Whisper via transformers.js Web Worker) ──
-  let whisperWorker  = null;
-  let whisperReady   = false;
-  let isRecording    = false;
-  let mediaRecorder  = null;
-  let audioChunks    = [];
-  let pendingAudio   = null;  // audio recorded before model finished loading
+  // ── Offline voice input (Whisper, fully local) ──
+  const TRANSCRIBE_TIMEOUT_MS = 25_000;
+
+  let whisperWorker   = null;
+  let whisperReady    = false;
+  let isRecording     = false;
+  let mediaRecorder   = null;
+  let audioChunks     = [];
+  let pendingAudio    = null;
+  let transcribeTimer = null;
 
   function micSetStatus(placeholder, title) {
     chatInput.placeholder = placeholder;
@@ -876,28 +879,39 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   }
 
   function micReset() {
+    clearTimeout(transcribeTimer);
+    transcribeTimer = null;
     isRecording = false;
     chatMicBtn.classList.remove("recording");
     micSetStatus("Ask a question…", whisperReady ? "Voice input (offline)" : "Voice input");
+  }
+
+  function sendAudioToWorker(float32) {
+    micSetStatus("Transcribing…", "Transcribing…");
+    transcribeTimer = setTimeout(() => {
+      micReset();
+      chatAppend("assistant", "Transcription timed out. Please try again.", true);
+    }, TRANSCRIBE_TIMEOUT_MS);
+    whisperWorker.postMessage({ type: "transcribe", audio: float32 }, [float32.buffer]);
   }
 
   function initWhisperWorker() {
     if (whisperWorker) return;
     whisperWorker = new Worker("./whisper-worker.js");
 
-    let loadTimeout = setTimeout(() => {
-      if (!whisperReady) {
-        whisperWorker.terminate();
-        whisperWorker = null;
-        pendingAudio = null;
-        micReset();
-        chatAppend("assistant", "Speech model failed to load (timed out). Check your internet connection — the model (~75 MB) must download once.", true);
-      }
-    }, 90000);
+    const loadTimer = setTimeout(() => {
+      if (whisperReady) return;
+      whisperWorker.terminate();
+      whisperWorker = null;
+      pendingAudio = null;
+      micReset();
+      chatAppend("assistant", "Voice model timed out loading. Try refreshing.", true);
+    }, 60_000);
 
     whisperWorker.onerror = (e) => {
-      clearTimeout(loadTimeout);
+      clearTimeout(loadTimer);
       whisperWorker = null;
+      whisperReady = false;
       pendingAudio = null;
       micReset();
       chatAppend("assistant", `Voice input unavailable: ${e.message || "worker error"}. Try refreshing.`, true);
@@ -907,28 +921,32 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
       if (data.type === "status") {
         micSetStatus(data.msg, data.msg);
       } else if (data.type === "ready") {
-        clearTimeout(loadTimeout);
+        clearTimeout(loadTimer);
         whisperReady = true;
         micSetStatus("Ask a question…", "Voice input (offline)");
         if (pendingAudio) {
-          micSetStatus("Transcribing…", "Transcribing…");
-          whisperWorker.postMessage({ type: "transcribe", audio: pendingAudio }, [pendingAudio.buffer]);
+          const audio = pendingAudio;
           pendingAudio = null;
+          sendAudioToWorker(audio);
         }
       } else if (data.type === "result") {
+        clearTimeout(transcribeTimer);
+        transcribeTimer = null;
         micReset();
-        const trimmed = data.text;
-        if (trimmed) {
-          chatInput.value = chatInput.value ? chatInput.value + " " + trimmed : trimmed;
+        if (data.text) {
+          chatInput.value = chatInput.value ? chatInput.value + " " + data.text : data.text;
           chatInput.style.height = "auto";
           chatInput.style.height = chatInput.scrollHeight + "px";
         }
       } else if (data.type === "error") {
-        clearTimeout(loadTimeout);
+        clearTimeout(loadTimer);
+        clearTimeout(transcribeTimer);
+        transcribeTimer = null;
         micReset();
-        chatAppend("assistant", `Transcription error: ${data.msg}`, true);
+        chatAppend("assistant", `Voice error: ${data.msg}`, true);
       }
     };
+
     whisperWorker.postMessage({ type: "load" });
   }
 
@@ -936,43 +954,37 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    } catch (e) {
-      chatAppend("assistant", "Microphone access denied. Please allow microphone permissions in your browser.", true);
+    } catch {
+      chatAppend("assistant", "Microphone access denied. Please allow microphone permissions.", true);
       return;
     }
 
     audioChunks = [];
-    // Prefer webm/opus; fall back to whatever the browser supports
     const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg"].find(
       t => MediaRecorder.isTypeSupported(t)
     ) || "";
     mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
-
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
 
     mediaRecorder.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
-      micSetStatus("Transcribing…", "Transcribing…");
       try {
-        const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
-        const arrayBuffer = await blob.arrayBuffer();
-        // Decode and resample to 16 kHz mono (required by Whisper)
+        const blob     = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+        const arrayBuf = await blob.arrayBuffer();
         const decodeCtx = new AudioContext();
-        const decoded   = await decodeCtx.decodeAudioData(arrayBuffer);
+        const decoded   = await decodeCtx.decodeAudioData(arrayBuf);
         decodeCtx.close();
-        const offline  = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
+        const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
         const src = offline.createBufferSource();
         src.buffer = decoded;
         src.connect(offline.destination);
         src.start(0);
-        const resampled = await offline.startRendering();
-        const float32   = resampled.getChannelData(0);
+        const float32 = (await offline.startRendering()).getChannelData(0);
         if (whisperReady) {
-          whisperWorker.postMessage({ type: "transcribe", audio: float32 }, [float32.buffer]);
+          sendAudioToWorker(float32);
         } else {
-          // Model still loading — hold audio until "ready" fires
           pendingAudio = float32;
-          micSetStatus("Model loading, will transcribe shortly…", "Waiting for model…");
+          micSetStatus("Model loading, transcribing shortly…", "Waiting for model…");
         }
       } catch (e) {
         micReset();
@@ -988,7 +1000,6 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
   chatMicBtn.addEventListener("click", () => {
     if (!whisperWorker) {
-      // First tap: load model + start recording simultaneously
       initWhisperWorker();
       startRecording();
       return;
@@ -997,10 +1008,10 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
       mediaRecorder?.stop();
       isRecording = false;
       chatMicBtn.classList.remove("recording");
-      micSetStatus("Transcribing…", "Transcribing…");
+      micSetStatus("Processing…", "Processing…");
     } else {
       if (!whisperReady) {
-        chatAppend("assistant", "Speech model is still loading, please wait a moment.", true);
+        chatAppend("assistant", "Voice model is still loading, please wait.", true);
         return;
       }
       startRecording();

@@ -4,7 +4,7 @@
    (Map is fully canvas-based – no tiles needed)
    ============================================ */
 
-const CACHE_NAME = "emergency-hub-v5";
+const CACHE_NAME = "emergency-hub-v8";
 
 // App shell files to pre-cache on install
 const APP_SHELL = [
@@ -14,8 +14,10 @@ const APP_SHELL = [
   "./app.js",
   "./whisper-worker.js",
   "./transformers.min.js",
-  "./ort-wasm-simd-threaded.jsep.wasm",
-  "./ort-wasm-simd-threaded.jsep.mjs",
+  "./ort-wasm.wasm",
+  "./ort-wasm-simd.wasm",
+  "./ort-wasm-simd-threaded.wasm",
+  "./ort-wasm-threaded.wasm",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
 ];

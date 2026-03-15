@@ -1,49 +1,56 @@
-// Offline speech-to-text worker using Whisper via transformers.js
-// Audio is processed entirely on-device — no network required after first model download.
+// Fully offline Whisper speech-to-text worker.
+// Uses @xenova/transformers v2 — designed for classic browser workers with importScripts.
+// All files (model + ONNX WASM runtime) are served locally — zero network requests.
 importScripts("./transformers.min.js");
 
-// Use locally bundled model and runtime files — fully offline.
-self.transformers.env.allowLocalModels  = true;
-self.transformers.env.allowRemoteModels = false;
-self.transformers.env.localModelPath    = "./models/";
-self.transformers.env.useBrowserCache   = false;
-// Point ONNX runtime to local WASM files instead of CDN.
-self.transformers.env.backends.onnx.wasm.wasmPaths = "./";
+const { pipeline, env } = self.transformers;
 
-let transcriber = null;
+env.allowLocalModels  = true;
+env.allowRemoteModels = false;
+env.localModelPath    = "./models/";
+env.useBrowserCache   = false;
+env.backends.onnx.wasm.wasmPaths  = "./";
+env.backends.onnx.wasm.numThreads = 1;
+
+const MODEL = "Xenova/whisper-tiny.en";
+
+let pipe = null;
+let busy = false;
 
 self.onmessage = async ({ data }) => {
-  if (data.type === "load") {
+  const { type } = data;
+
+  if (type === "load") {
+    if (busy || pipe) return;
+    busy = true;
     try {
-      self.postMessage({ type: "status", msg: "Loading speech model…" });
-      transcriber = await self.transformers.pipeline(
-        "automatic-speech-recognition",
-        "Xenova/whisper-tiny.en",
-        { progress_callback: (p) => {
-            if (p.status === "progress") {
-              const pct = Math.round(p.progress ?? 0);
-              self.postMessage({ type: "status", msg: `Loading model… ${pct}%` });
-            }
-          }
-        }
-      );
+      self.postMessage({ type: "status", msg: "Loading voice model…" });
+      pipe = await pipeline("automatic-speech-recognition", MODEL, {
+        progress_callback(p) {
+          if (p.status === "progress")
+            self.postMessage({ type: "status", msg: `Loading… ${Math.round(p.progress ?? 0)}%` });
+        },
+      });
+      busy = false;
       self.postMessage({ type: "ready" });
-    } catch (e) {
-      self.postMessage({ type: "error", msg: e.message });
+    } catch (err) {
+      busy = false;
+      self.postMessage({ type: "error", msg: err.message });
     }
+    return;
   }
 
-  if (data.type === "transcribe") {
-    if (!transcriber) {
-      self.postMessage({ type: "error", msg: "Model not ready yet, please try again." });
-      return;
-    }
+  if (type === "transcribe") {
+    if (!pipe) { self.postMessage({ type: "error", msg: "Model not loaded." }); return; }
+    if (busy)  { self.postMessage({ type: "error", msg: "Already transcribing, please wait." }); return; }
+    busy = true;
     try {
-      // data.audio = Float32Array at 16 kHz (mono)
-      const result = await transcriber(data.audio, { language: "en", task: "transcribe" });
-      self.postMessage({ type: "result", text: result.text.trim() });
-    } catch (e) {
-      self.postMessage({ type: "error", msg: e.message });
+      const out = await pipe(data.audio, { language: "en", task: "transcribe" });
+      busy = false;
+      self.postMessage({ type: "result", text: out.text.trim() });
+    } catch (err) {
+      busy = false;
+      self.postMessage({ type: "error", msg: err.message });
     }
   }
 };
