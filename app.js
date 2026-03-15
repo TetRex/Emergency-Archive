@@ -854,6 +854,7 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   let isRecording    = false;
   let mediaRecorder  = null;
   let audioChunks    = [];
+  let pendingAudio   = null;  // audio recorded before model finished loading
 
   function micSetStatus(placeholder, title) {
     chatInput.placeholder = placeholder;
@@ -875,6 +876,11 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
       } else if (data.type === "ready") {
         whisperReady = true;
         micSetStatus("Ask a question…", "Voice input (offline)");
+        if (pendingAudio) {
+          micSetStatus("Transcribing…", "Transcribing…");
+          whisperWorker.postMessage({ type: "transcribe", audio: pendingAudio }, [pendingAudio.buffer]);
+          pendingAudio = null;
+        }
       } else if (data.type === "result") {
         micReset();
         const trimmed = data.text;
@@ -916,8 +922,9 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
         const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
         const arrayBuffer = await blob.arrayBuffer();
         // Decode and resample to 16 kHz mono (required by Whisper)
-        const audioCtx = new OfflineAudioContext(1, 1, 16000);
-        const decoded  = await new AudioContext().decodeAudioData(arrayBuffer);
+        const decodeCtx = new AudioContext();
+        const decoded   = await decodeCtx.decodeAudioData(arrayBuffer);
+        decodeCtx.close();
         const offline  = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
         const src = offline.createBufferSource();
         src.buffer = decoded;
@@ -925,7 +932,13 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
         src.start(0);
         const resampled = await offline.startRendering();
         const float32   = resampled.getChannelData(0);
-        whisperWorker.postMessage({ type: "transcribe", audio: float32 }, [float32.buffer]);
+        if (whisperReady) {
+          whisperWorker.postMessage({ type: "transcribe", audio: float32 }, [float32.buffer]);
+        } else {
+          // Model still loading — hold audio until "ready" fires
+          pendingAudio = float32;
+          micSetStatus("Model loading, will transcribe shortly…", "Waiting for model…");
+        }
       } catch (e) {
         micReset();
         chatAppend("assistant", `Audio processing error: ${e.message}`, true);
