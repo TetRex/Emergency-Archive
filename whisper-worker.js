@@ -30,6 +30,10 @@ self.onmessage = async ({ data }) => {
   }
 
   if (data.type === "transcribe") {
+    if (!transcriber) {
+      self.postMessage({ type: "error", msg: "Model not ready yet, please try again." });
+      return;
+    }
     try {
       // data.audio = Float32Array at 16 kHz (mono)
       const result = await transcriber(data.audio, { language: "en", task: "transcribe" });
