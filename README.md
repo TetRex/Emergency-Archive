@@ -16,7 +16,7 @@ A fully offline-capable emergency preparedness Progressive Web App (PWA). Once l
 
 | Home Dashboard |
 |:---:|
-| ![Home dashboard](.github/assets/Screenshot%202026-02-26%20at%2015.40.09.png) |
+| ![Home dashboard](.github/assets//Screenshot%202026-02-26%20at%2015.40.09.png) |
 
 ---
 
