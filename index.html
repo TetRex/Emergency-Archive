@@ -173,40 +173,17 @@
   <section id="page-library" class="page">
     <header class="page-header">
       <h1>&#128218; Library</h1>
-      <span class="subtitle">Offline ZIM file reader</span>
+      <span class="subtitle">Wikipedia offline</span>
     </header>
-
-    <!-- File selection panel -->
-    <div id="zim-dropzone" class="zim-dropzone">
-      <p class="zim-shelf-title">&#128218; Bundled References</p>
-      <div id="zim-bundled-list" class="zim-bundled-list">
-        <!-- Populated by JS -->
-      </div>
-      <div class="zim-custom-row">
-        <span class="zim-or">or open a custom file</span>
-        <label class="btn-secondary zim-pick-label">
-          &#128194; Choose File
-          <input type="file" id="zim-file-input" accept=".zim" style="display:none" />
-        </label>
-      </div>
-    </div>
 
     <!-- Loading state -->
     <div id="zim-loading" class="zim-loading hidden">
       <div class="zim-spinner"></div>
-      <p id="zim-loading-msg">Opening ZIM file&hellip;</p>
+      <p id="zim-loading-msg">Opening&hellip;</p>
     </div>
 
     <!-- ZIM content (browse + article) -->
     <div id="zim-content" class="zim-content hidden">
-      <div class="zim-info-bar">
-        <div>
-          <div id="zim-name" class="zim-name"></div>
-          <div id="zim-stats" class="zim-stats"></div>
-        </div>
-        <button id="zim-close-btn" class="zim-close-btn" title="Close ZIM">&#10005;</button>
-      </div>
-
       <div id="zim-error" class="zim-error hidden"></div>
 
       <!-- Browse / search view -->
@@ -215,7 +192,7 @@
           <input type="search" id="zim-search" class="zim-search-input"
                  placeholder="Search articles&hellip;" autocomplete="off" />
         </div>
-        <div id="zim-article-list" class="zim-article-list"></div>
+        <div id="zim-article-list" class="zim-article-grid"></div>
         <button id="zim-load-more" class="btn-secondary zim-load-more hidden">Load more&hellip;</button>
       </div>
 

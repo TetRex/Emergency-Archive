@@ -991,18 +991,10 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     }
   }
 
-  const BUNDLED_ZIMS = [
-    {
-      url:  './wikipedia_en_100_mini_2026-01.zim',
-      name: 'Wikipedia EN — Jan 2026',
-      desc: '100 articles · English',
-    },
-    {
-      url:  './wikipedia_en_100_mini_2025-06.zim',
-      name: 'Wikipedia EN — Jun 2025',
-      desc: '100 articles · English',
-    },
-  ];
+  const BUNDLED_ZIM = {
+    url:  './wikipedia_en_100_mini_2026-01.zim',
+    name: 'Wikipedia EN — Jan 2026',
+  };
 
   class ZimReader {
     constructor(file) {
@@ -1246,14 +1238,9 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   let zimTitleOffset = 0;
   let zimSearchQuery = '';
 
-  const zimDropzone     = $('#zim-dropzone');
   const zimLoadingEl    = $('#zim-loading');
   const zimLoadingMsg   = $('#zim-loading-msg');
   const zimContentEl    = $('#zim-content');
-  const zimFileInput    = $('#zim-file-input');
-  const zimNameEl       = $('#zim-name');
-  const zimStatsEl      = $('#zim-stats');
-  const zimCloseBtn     = $('#zim-close-btn');
   const zimBrowseEl     = $('#zim-browse');
   const zimSearchInput  = $('#zim-search');
   const zimArticleList  = $('#zim-article-list');
@@ -1266,7 +1253,6 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
   function _zimShow(state) {
     const hasContent = state === 'browse' || state === 'article';
-    zimDropzone.classList.toggle('hidden', state !== 'drop');
     zimLoadingEl.classList.toggle('hidden', state !== 'loading');
     zimContentEl.classList.toggle('hidden', !hasContent);
     if (hasContent) {
@@ -1283,19 +1269,18 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
   async function zimOpenFile(file) {
     _zimShow('loading');
-    zimLoadingMsg.textContent = 'Reading header…';
+    zimLoadingMsg.textContent = 'Opening…';
     try {
       const reader = new ZimReader(file);
       await reader.init(msg => { zimLoadingMsg.textContent = msg; });
       zimReader = reader;
-      zimNameEl.textContent = file.name.replace(/\.zim$/i, '').replace(/[_-]+/g, ' ');
-      zimStatsEl.textContent = `${reader.header.articleCount.toLocaleString()} articles`;
       zimSearchQuery = '';
       zimSearchInput.value = '';
       _zimShow('browse');
       await _zimRenderList(true);
     } catch (err) {
-      _zimShow('drop');
+      _zimShow('loading'); // keep spinner hidden, show error over content area
+      zimContentEl.classList.remove('hidden');
       _zimError(`Failed to open: ${err.message}`);
     }
   }
@@ -1303,21 +1288,15 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   async function _zimRenderList(reset = false) {
     if (reset) {
       zimArticleList.textContent = '';
-      const loading = document.createElement('p');
-      loading.className = 'empty-msg';
-      loading.style.padding = '12px 0';
-      loading.textContent = 'Loading…';
-      zimArticleList.appendChild(loading);
       zimTitleOffset = 0;
     }
-    const { results, nextStart } = await zimReader.scanTitles(zimSearchQuery, zimTitleOffset, 25);
+    const { results, nextStart } = await zimReader.scanTitles(zimSearchQuery, zimTitleOffset, 100);
     zimTitleOffset = nextStart;
 
     if (reset) zimArticleList.textContent = '';
     if (results.length === 0 && !zimArticleList.children.length) {
       const msg = document.createElement('p');
       msg.className = 'empty-msg';
-      msg.style.padding = '12px 0';
       msg.textContent = 'No articles found';
       zimArticleList.appendChild(msg);
       zimLoadMoreBtn.classList.add('hidden');
@@ -1325,17 +1304,13 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     }
 
     for (const { entry } of results) {
-      const item = document.createElement('div');
-      item.className = 'zim-article-item';
-      const titleEl = document.createElement('div');
-      titleEl.className = 'zim-ai-title';
-      titleEl.textContent = entry.title;
-      const urlEl = document.createElement('div');
-      urlEl.className = 'zim-ai-url';
-      urlEl.textContent = `${entry.namespace}/${entry.url}`;
-      item.append(titleEl, urlEl);
-      item.addEventListener('click', () => _zimOpenArticle(entry));
-      zimArticleList.appendChild(item);
+      const card = document.createElement('div');
+      card.className = 'zim-article-card';
+      const title = document.createElement('span');
+      title.textContent = entry.title;
+      card.appendChild(title);
+      card.addEventListener('click', () => _zimOpenArticle(entry));
+      zimArticleList.appendChild(card);
     }
     zimLoadMoreBtn.classList.toggle('hidden', nextStart >= zimReader.header.articleCount);
   }
@@ -1351,18 +1326,110 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
         // Strip scripts and event handlers; render in sandboxed iframe (no allow-scripts)
         const clean = text
           .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<link\b[^>]*>/gi, '')
           .replace(/\s+on\w+\s*=\s*"[^"]*"/gi, '')
           .replace(/\s+on\w+\s*=\s*'[^']*'/gi, '');
 
         const injectStyle = `<style>
-          html,body{background:#0a0c14;color:#eaeaea;font-family:-apple-system,sans-serif;
-            margin:0;padding:12px;line-height:1.6;font-size:15px}
-          a{color:#ff6b35}img{max-width:100%;height:auto}
-          table{border-collapse:collapse;max-width:100%;font-size:.85em}
-          td,th{border:1px solid #2a2d3e;padding:4px 8px}
-          pre,code{background:#1c2030;border-radius:4px;padding:2px 5px;font-size:.85em}
-          h1{font-size:1.3em}h2{font-size:1.1em}h3{font-size:1em}
-          h1,h2,h3{margin:.8em 0 .3em}p{margin-bottom:.6em}
+          /* ── Reset & base ── */
+          *{box-sizing:border-box}
+          html,body{
+            background:#ffffff;color:#1a1a1a;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+            margin:0;padding:0;line-height:1.7;font-size:16px;
+          }
+
+          /* ── Hide Wikipedia chrome ── */
+          #mw-navigation,#mw-head,#mw-panel,#mw-head-base,#mw-page-base,
+          #footer,#catlinks,.mw-indicators,.mw-editsection,
+          .mw-editsection-bracket,.vector-page-toolbar,.vector-column-start,
+          .vector-column-end,.vector-header,.vector-sticky-header,
+          .mw-portlet,.mw-portlet-lang,.mw-portlet-coll-print_export,
+          #toc,.toc,.mw-toc,.tocnumber,
+          .navbox,.navbox-styles,.ambox,.cmbox,.ombox,.tmbox,
+          .sistersitebox,.noprint,sup.reference,
+          .reflist,.references,.mw-references-wrap,
+          .hatnote,.hatnote-icon,
+          .mw-jump-link,a.mw-selflink{display:none!important}
+
+          /* ── Content container ── */
+          #content,#mw-content-text,.mw-body,.mw-body-content,
+          .mw-page-container,.mw-page-container-inner,
+          #bodyContent,#mw-content-block{
+            background:transparent!important;border:none!important;
+            margin:0!important;padding:0!important;max-width:none!important;
+            float:none!important;
+          }
+          .mw-parser-output{
+            padding:16px 18px 40px;max-width:720px;margin:0 auto;
+          }
+
+          /* ── Typography ── */
+          h1,#firstHeading,.mw-first-heading{
+            font-size:1.6em;font-weight:700;color:#111;
+            border-bottom:1px solid #d0d0d0;padding-bottom:.4em;margin:0 0 .8em;
+          }
+          h2{font-size:1.25em;font-weight:600;color:#222;
+            border-bottom:1px solid #e0e0e0;padding-bottom:.2em;margin:1.4em 0 .5em}
+          h3{font-size:1.05em;font-weight:600;color:#333;margin:1.2em 0 .4em}
+          h4,h5,h6{font-size:.95em;font-weight:600;color:#555;margin:1em 0 .3em}
+          p{margin:0 0 .8em}
+
+          /* ── Links ── */
+          a{color:#0645ad;text-decoration:none}
+          a:hover{text-decoration:underline;color:#0b0080}
+
+          /* ── Images ── */
+          img{max-width:100%;height:auto;border-radius:4px;display:block;margin:.5em auto}
+          figure,figcaption{max-width:100%}
+          figcaption{font-size:.8em;color:#666;text-align:center;margin-top:.3em}
+          .thumb,.thumbinner,.thumbcaption{
+            max-width:100%!important;width:auto!important;float:none!important;
+            display:block;margin:.8em auto!important;
+          }
+
+          /* ── Tables ── */
+          table{border-collapse:collapse;width:100%;font-size:.85em;margin:.8em 0;
+            overflow-x:auto;display:block}
+          td,th{border:1px solid #c8ccd1;padding:6px 10px;text-align:left;
+            background:#fff;vertical-align:top}
+          th{background:#eaecf0;color:#222;font-weight:600}
+          tr:nth-child(even) td{background:#f8f9fa}
+          .wikitable{border:1px solid #a2a9b1}
+
+          /* ── Infobox ── */
+          .infobox,.infobox_v3,.ib-person,.ib-company{
+            float:none!important;clear:both;width:100%!important;max-width:100%!important;
+            margin:0 0 1.2em!important;background:#f8f9fa!important;
+            border:1px solid #a2a9b1!important;border-radius:6px!important;
+            font-size:.85em!important;
+          }
+          .infobox caption,.infobox_v3 caption{
+            background:#eaecf0!important;color:#222!important;
+            font-weight:600;padding:6px 10px;border-radius:6px 6px 0 0;
+          }
+
+          /* ── Code ── */
+          pre,code,kbd,samp{
+            background:#f6f8fa;border:1px solid #d0d7de;border-radius:4px;
+            font-family:"SFMono-Regular",Consolas,monospace;font-size:.85em;color:#1a1a1a;
+          }
+          code{padding:1px 5px}
+          pre{padding:10px 14px;overflow-x:auto;line-height:1.5}
+
+          /* ── Blockquote ── */
+          blockquote{
+            border-left:3px solid #0645ad;margin:1em 0;
+            padding:.4em 1em;background:#f0f4ff;color:#333;
+            border-radius:0 4px 4px 0;
+          }
+
+          /* ── Lists ── */
+          ul,ol{padding-left:1.5em;margin:.5em 0 .8em}
+          li{margin:.2em 0}
+
+          /* ── Horizontal rules ── */
+          hr{border:none;border-top:1px solid #d0d0d0;margin:1.2em 0}
         </style>`;
 
         const html = /<html[\s>]/i.test(clean)
@@ -1424,35 +1491,13 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     }
   }
 
-  // Render bundled ZIM cards (runs once on first library visit)
+  // Auto-open the bundled ZIM on first library visit
   function initLibrary() {
-    const listEl = $('#zim-bundled-list');
-    if (listEl.children.length) return;
-    BUNDLED_ZIMS.forEach(zim => {
-      const card = document.createElement('div');
-      card.className = 'zim-file-card';
-      const icon = document.createElement('span');
-      icon.className = 'zim-file-icon';
-      icon.textContent = '📖';
-      const info = document.createElement('div');
-      info.className = 'zim-file-info';
-      const nameEl = document.createElement('div');
-      nameEl.className = 'zim-file-name';
-      nameEl.textContent = zim.name;
-      const descEl = document.createElement('div');
-      descEl.className = 'zim-file-desc';
-      descEl.textContent = zim.desc;
-      info.append(nameEl, descEl);
-      card.append(icon, info);
-      card.addEventListener('click', () => zimOpenFile(new HttpFile(zim.url, zim.name)));
-      listEl.appendChild(card);
-    });
+    if (zimReader) return; // already loaded
+    zimOpenFile(new HttpFile(BUNDLED_ZIM.url, BUNDLED_ZIM.name));
   }
 
   // Library event listeners
-  zimFileInput.addEventListener('change', e => { if (e.target.files[0]) zimOpenFile(e.target.files[0]); });
-
-  zimCloseBtn.addEventListener('click', () => { zimReader = null; zimFrame.srcdoc = ''; _zimShow('drop'); });
   zimBackBtn.addEventListener('click', () => _zimShow('browse'));
   zimLoadMoreBtn.addEventListener('click', () => _zimRenderList(false));
 

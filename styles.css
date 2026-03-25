@@ -826,62 +826,6 @@ html, body {
 /* ==================== LIBRARY / ZIM PAGE ==================== */
 .hidden { display: none !important; }
 
-.zim-dropzone {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
-}
-.zim-shelf-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: var(--clr-text-dim);
-  margin-bottom: 2px;
-}
-.zim-bundled-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.zim-file-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--clr-card);
-  border: 1px solid var(--clr-border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  cursor: pointer;
-  transition: border-color .15s, background .15s;
-}
-.zim-file-card:hover, .zim-file-card:active {
-  border-color: var(--clr-primary);
-  background: var(--clr-card-hover);
-}
-.zim-file-icon { font-size: 2rem; flex-shrink: 0; }
-.zim-file-info { display: flex; flex-direction: column; gap: 3px; }
-.zim-file-name { font-weight: 700; font-size: 0.95rem; }
-.zim-file-desc { font-size: 0.8rem; color: var(--clr-text-dim); }
-.zim-custom-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 6px;
-}
-.zim-or { font-size: 0.8rem; color: var(--clr-text-dim); white-space: nowrap; }
-.zim-pick-label {
-  display: inline-block;
-  padding: 8px 18px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--clr-border);
-  background: var(--clr-card);
-  color: var(--clr-text);
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
 
 .zim-loading {
   display: flex;
@@ -908,24 +852,6 @@ html, body {
   gap: 10px;
   min-height: 0;
 }
-.zim-info-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--clr-card);
-  border: 1px solid var(--clr-border);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  flex-shrink: 0;
-}
-.zim-name { font-weight: 700; font-size: 0.95rem; }
-.zim-stats { font-size: 0.78rem; color: var(--clr-text-dim); margin-top: 2px; }
-.zim-close-btn {
-  background: none; border: none; cursor: pointer;
-  color: var(--clr-text-dim); font-size: 1.1rem; padding: 4px 8px;
-  border-radius: 4px; line-height: 1;
-}
-.zim-close-btn:hover { color: var(--clr-text); }
 
 .zim-error {
   background: rgba(230,57,70,.12);
@@ -958,28 +884,33 @@ html, body {
 }
 .zim-search-input:focus { border-color: var(--clr-primary); }
 
-.zim-article-list {
+.zim-article-grid {
   flex: 1;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  align-content: start;
 }
-.zim-article-item {
+.zim-article-card {
   background: var(--clr-card);
   border: 1px solid var(--clr-border);
-  border-radius: var(--radius-sm);
-  padding: 11px 14px;
+  border-radius: var(--radius);
+  padding: 16px 14px;
   cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
   transition: border-color .15s, background .15s;
 }
-.zim-article-item:hover, .zim-article-item:active {
+.zim-article-card:hover, .zim-article-card:active {
   border-color: var(--clr-primary);
   background: var(--clr-card-hover);
 }
-.zim-ai-title { font-weight: 600; font-size: 0.9rem; }
-.zim-ai-url { font-size: 0.75rem; color: var(--clr-text-dim); margin-top: 3px; }
-.zim-load-more { align-self: center; margin-top: 4px; flex-shrink: 0; }
+.zim-load-more { align-self: center; margin-top: 4px; flex-shrink: 0; grid-column: 1 / -1; }
 
 .zim-article-view {
   display: flex;
@@ -1006,6 +937,6 @@ html, body {
   flex: 1;
   border: none;
   border-radius: var(--radius-sm);
-  background: #0a0c14;
+  background: #ffffff;
   min-height: 0;
 }
