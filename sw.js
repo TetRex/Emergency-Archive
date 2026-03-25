@@ -14,6 +14,7 @@ const APP_SHELL = [
   "./app.js",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+  "https://cdn.jsdelivr.net/npm/fzstd@0.1.0/umd/index.js",
 ];
 
 // ─── Install: pre-cache app shell ───

@@ -1035,11 +1035,15 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
       const dv = await this._readRange(0, 80);
       if (dv.getUint32(0, true) !== 0x044D495A)
         throw new Error('Not a valid ZIM file (wrong magic number)');
+      // Detect UINT64_MAX (0xFFFFFFFFFFFFFFFF) for titlePtrPos without float precision loss
+      const titleLo = dv.getUint32(40, true);
+      const titleHi = dv.getUint32(44, true);
       this.header = {
         articleCount:  dv.getUint32(24, true),
         clusterCount:  dv.getUint32(28, true),
         urlPtrPos:     this._u64(dv, 32),
-        titlePtrPos:   this._u64(dv, 40),
+        titlePtrPos:   titleHi * 4294967296 + titleLo,
+        hasTitleIndex: !(titleLo === 0xFFFFFFFF && titleHi === 0xFFFFFFFF),
         clusterPtrPos: this._u64(dv, 48),
         mimeListPos:   this._u64(dv, 56),
         mainPage:      dv.getUint32(64, true),
@@ -1062,12 +1066,18 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
     async _loadPtrLists() {
       const n = this.header.articleCount;
-      const [urlBuf, titleBuf] = await Promise.all([
-        this.file.slice(this.header.urlPtrPos, this.header.urlPtrPos + n * 8).arrayBuffer(),
-        this.file.slice(this.header.titlePtrPos, this.header.titlePtrPos + n * 4).arrayBuffer(),
-      ]);
+      const urlBuf = await this.file.slice(
+        this.header.urlPtrPos, this.header.urlPtrPos + n * 8
+      ).arrayBuffer();
       this.urlPtrView = new DataView(urlBuf);
-      this.titlePtrs  = new Uint32Array(titleBuf);
+
+      // ZIM v6 sets titlePtrPos = UINT64_MAX — no title index available
+      if (this.header.hasTitleIndex) {
+        const titleBuf = await this.file.slice(
+          this.header.titlePtrPos, this.header.titlePtrPos + n * 4
+        ).arrayBuffer();
+        this.titlePtrs = new Uint32Array(titleBuf);
+      }
     }
 
     _urlOffset(idx) {
@@ -1129,17 +1139,22 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
       return null;
     }
 
-    // Scan title-sorted list for namespace-A articles matching query
+    // Scan article list for namespace A/C entries matching query
     async scanTitles(query, start, limit) {
       const q = query.toLowerCase();
       const results = [];
       const total = this.header.articleCount;
-      const maxScan = query ? 8000 : limit * 4;
+      // When searching, cap scan to avoid hanging; when browsing, scan all to find real articles
+      const maxScan = query ? 8000 : total;
       let i = start, scanned = 0;
       while (i < total && results.length < limit && scanned < maxScan) {
-        const entry = await this.getEntryByTitleIdx(i);
+        const entry = this.header.hasTitleIndex
+          ? await this.getEntryByTitleIdx(i)
+          : await this.readDirEntry(i);
         i++; scanned++;
-        if (entry.namespace !== 'A') continue;
+        if (entry.namespace !== 'A' && entry.namespace !== 'C') continue;
+        // When browsing (no query), skip redirects to show only real articles
+        if (!query && entry.isRedirect) continue;
         if (!query || entry.title.toLowerCase().includes(q))
           results.push({ titleIdx: i - 1, entry });
       }
@@ -1166,7 +1181,13 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     async _decompress(type, data) {
       if (type === 0 || type === 1) return data;
       if (type === 4) return this._inflate(data);
-      if (type === 7) {
+      // Detect zstd by magic bytes (0xFD2FB528 LE = 28 B5 2F FD).
+      // ZIM v6 files may declare compression type 5 but actually contain zstd data.
+      const isZstd = type === 7 || (
+        data.length >= 4 &&
+        data[0] === 0x28 && data[1] === 0xB5 && data[2] === 0x2F && data[3] === 0xFD
+      );
+      if (isZstd) {
         if (typeof fzstd === 'undefined') {
           await new Promise((res, rej) => {
             const s = document.createElement('script');
@@ -1375,12 +1396,21 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
     if (/^https?:\/\//i.test(href)) { window.open(href, '_blank', 'noopener'); return; }
 
-    // Strip leading '../' hops → "Namespace/Url" format
-    const path = href.replace(/^(\.\.\/|\.\/)+/, '');
+    // Strip hash fragment, then strip leading ./ and ../ hops
+    const clean = href.split('#')[0];
+    if (!clean) return;
+    const path = clean.replace(/^(\.\.\/|\.\/)+/, '');
     const slash = path.indexOf('/');
-    if (slash < 0) return;
-    const ns  = path.slice(0, slash);
-    const url = decodeURIComponent(path.slice(slash + 1)).replace(/ /g, '_');
+
+    let ns, url;
+    if (slash < 0) {
+      // ZIM v6 links: no namespace prefix (e.g. "./Amazon_(company)")
+      ns  = 'C';
+      url = decodeURIComponent(path).replace(/ /g, '_');
+    } else {
+      ns  = path.slice(0, slash);
+      url = decodeURIComponent(path.slice(slash + 1)).replace(/ /g, '_');
+    }
 
     _zimShow('loading');
     zimLoadingMsg.textContent = 'Navigating…';
