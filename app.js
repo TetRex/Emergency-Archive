@@ -54,6 +54,7 @@
     }
     if (pageId === "page-home") refreshHome();
     if (pageId === "page-chat") chatInit();
+    if (pageId === "page-library") initLibrary();
   }
 
   navBtns.forEach(btn => btn.addEventListener("click", () => navigateTo(btn.dataset.target)));
@@ -972,6 +973,37 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
   // ──────────── ZIM Library ────────────
 
+  // Reads a local HTTP file via Range requests — same interface as File.slice()
+  class HttpFile {
+    constructor(url, name) {
+      this.url  = url;
+      this.name = name || url.split('/').pop();
+    }
+    slice(start, end) {
+      const { url } = this;
+      return {
+        arrayBuffer: async () => {
+          const res = await fetch(url, { headers: { Range: `bytes=${start}-${end - 1}` } });
+          if (!res.ok && res.status !== 206) throw new Error(`HTTP ${res.status} reading ZIM`);
+          return res.arrayBuffer();
+        },
+      };
+    }
+  }
+
+  const BUNDLED_ZIMS = [
+    {
+      url:  './wikipedia_en_100_mini_2026-01.zim',
+      name: 'Wikipedia EN — Jan 2026',
+      desc: '100 articles · English',
+    },
+    {
+      url:  './wikipedia_en_100_mini_2025-06.zim',
+      name: 'Wikipedia EN — Jun 2025',
+      desc: '100 articles · English',
+    },
+  ];
+
   class ZimReader {
     constructor(file) {
       this.file = file;
@@ -1362,18 +1394,33 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     }
   }
 
+  // Render bundled ZIM cards (runs once on first library visit)
+  function initLibrary() {
+    const listEl = $('#zim-bundled-list');
+    if (listEl.children.length) return;
+    BUNDLED_ZIMS.forEach(zim => {
+      const card = document.createElement('div');
+      card.className = 'zim-file-card';
+      const icon = document.createElement('span');
+      icon.className = 'zim-file-icon';
+      icon.textContent = '📖';
+      const info = document.createElement('div');
+      info.className = 'zim-file-info';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'zim-file-name';
+      nameEl.textContent = zim.name;
+      const descEl = document.createElement('div');
+      descEl.className = 'zim-file-desc';
+      descEl.textContent = zim.desc;
+      info.append(nameEl, descEl);
+      card.append(icon, info);
+      card.addEventListener('click', () => zimOpenFile(new HttpFile(zim.url, zim.name)));
+      listEl.appendChild(card);
+    });
+  }
+
   // Library event listeners
   zimFileInput.addEventListener('change', e => { if (e.target.files[0]) zimOpenFile(e.target.files[0]); });
-
-  zimDropzone.addEventListener('dragover', e => { e.preventDefault(); zimDropzone.classList.add('zim-drag-over'); });
-  zimDropzone.addEventListener('dragleave', () => zimDropzone.classList.remove('zim-drag-over'));
-  zimDropzone.addEventListener('drop', e => {
-    e.preventDefault();
-    zimDropzone.classList.remove('zim-drag-over');
-    const f = e.dataTransfer.files[0];
-    if (f?.name.toLowerCase().endsWith('.zim')) zimOpenFile(f);
-    else _zimError('Please drop a .zim file');
-  });
 
   zimCloseBtn.addEventListener('click', () => { zimReader = null; zimFrame.srcdoc = ''; _zimShow('drop'); });
   zimBackBtn.addEventListener('click', () => _zimShow('browse'));

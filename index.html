@@ -176,15 +176,19 @@
       <span class="subtitle">Offline ZIM file reader</span>
     </header>
 
-    <!-- File drop zone -->
+    <!-- File selection panel -->
     <div id="zim-dropzone" class="zim-dropzone">
-      <div class="zim-drop-icon">&#128194;</div>
-      <p class="zim-drop-title">Open a ZIM File</p>
-      <p class="zim-drop-hint">ZIM files let you read Wikipedia, first aid guides, and other references completely offline. Download them from kiwix.org.</p>
-      <label class="btn-primary zim-pick-label">
-        &#128194; Choose File
-        <input type="file" id="zim-file-input" accept=".zim" style="display:none" />
-      </label>
+      <p class="zim-shelf-title">&#128218; Bundled References</p>
+      <div id="zim-bundled-list" class="zim-bundled-list">
+        <!-- Populated by JS -->
+      </div>
+      <div class="zim-custom-row">
+        <span class="zim-or">or open a custom file</span>
+        <label class="btn-secondary zim-pick-label">
+          &#128194; Choose File
+          <input type="file" id="zim-file-input" accept=".zim" style="display:none" />
+        </label>
+      </div>
     </div>
 
     <!-- Loading state -->

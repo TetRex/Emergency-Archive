@@ -829,38 +829,58 @@ html, body {
 .zim-dropzone {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 40px 24px;
-  border: 2px dashed var(--clr-border);
-  border-radius: var(--radius);
-  text-align: center;
+  gap: 10px;
   flex: 1;
-  transition: border-color .2s, background .2s;
 }
-.zim-dropzone.zim-drag-over {
-  border-color: var(--clr-primary);
-  background: rgba(255,107,53,.06);
-}
-.zim-drop-icon { font-size: 52px; }
-.zim-drop-title { font-size: 1.15rem; font-weight: 700; }
-.zim-drop-hint {
-  font-size: 0.85rem;
+.zim-shelf-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
   color: var(--clr-text-dim);
-  line-height: 1.5;
-  max-width: 320px;
+  margin-bottom: 2px;
 }
+.zim-bundled-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.zim-file-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.zim-file-card:hover, .zim-file-card:active {
+  border-color: var(--clr-primary);
+  background: var(--clr-card-hover);
+}
+.zim-file-icon { font-size: 2rem; flex-shrink: 0; }
+.zim-file-info { display: flex; flex-direction: column; gap: 3px; }
+.zim-file-name { font-weight: 700; font-size: 0.95rem; }
+.zim-file-desc { font-size: 0.8rem; color: var(--clr-text-dim); }
+.zim-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+.zim-or { font-size: 0.8rem; color: var(--clr-text-dim); white-space: nowrap; }
 .zim-pick-label {
   display: inline-block;
-  padding: 12px 28px;
+  padding: 8px 18px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-end));
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.9rem;
+  border: 1px solid var(--clr-border);
+  background: var(--clr-card);
+  color: var(--clr-text);
+  font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
-  margin-top: 4px;
 }
 
 .zim-loading {
