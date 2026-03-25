@@ -970,6 +970,424 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     chatInput.style.height = chatInput.scrollHeight + "px";
   });
 
+  // ──────────── ZIM Library ────────────
+
+  class ZimReader {
+    constructor(file) {
+      this.file = file;
+      this.header = null;
+      this.mimeTypes = [];
+      this.urlPtrView = null;
+      this.titlePtrs  = null;
+    }
+
+    async init(onProgress) {
+      onProgress('Reading header…');
+      await this._readHeader();
+      await this._readMimeTypes();
+      onProgress(`Loading index (${this.header.articleCount.toLocaleString()} articles)…`);
+      await this._loadPtrLists();
+    }
+
+    async _readRange(offset, length) {
+      return new DataView(await this.file.slice(offset, offset + length).arrayBuffer());
+    }
+
+    _u64(dv, offset) {
+      const lo = dv.getUint32(offset, true);
+      const hi = dv.getUint32(offset + 4, true);
+      return hi * 4294967296 + lo;
+    }
+
+    async _readHeader() {
+      const dv = await this._readRange(0, 80);
+      if (dv.getUint32(0, true) !== 0x044D495A)
+        throw new Error('Not a valid ZIM file (wrong magic number)');
+      this.header = {
+        articleCount:  dv.getUint32(24, true),
+        clusterCount:  dv.getUint32(28, true),
+        urlPtrPos:     this._u64(dv, 32),
+        titlePtrPos:   this._u64(dv, 40),
+        clusterPtrPos: this._u64(dv, 48),
+        mimeListPos:   this._u64(dv, 56),
+        mainPage:      dv.getUint32(64, true),
+        checksumPos:   this._u64(dv, 72),
+      };
+    }
+
+    async _readMimeTypes() {
+      const dv = await this._readRange(this.header.mimeListPos, 4096);
+      const bytes = new Uint8Array(dv.buffer);
+      let pos = 0;
+      while (pos < bytes.length) {
+        let end = pos;
+        while (end < bytes.length && bytes[end] !== 0) end++;
+        if (end === pos) break;
+        this.mimeTypes.push(new TextDecoder().decode(bytes.slice(pos, end)));
+        pos = end + 1;
+      }
+    }
+
+    async _loadPtrLists() {
+      const n = this.header.articleCount;
+      const [urlBuf, titleBuf] = await Promise.all([
+        this.file.slice(this.header.urlPtrPos, this.header.urlPtrPos + n * 8).arrayBuffer(),
+        this.file.slice(this.header.titlePtrPos, this.header.titlePtrPos + n * 4).arrayBuffer(),
+      ]);
+      this.urlPtrView = new DataView(urlBuf);
+      this.titlePtrs  = new Uint32Array(titleBuf);
+    }
+
+    _urlOffset(idx) {
+      const lo = this.urlPtrView.getUint32(idx * 8, true);
+      const hi = this.urlPtrView.getUint32(idx * 8 + 4, true);
+      return hi * 4294967296 + lo;
+    }
+
+    async readDirEntry(urlIdx) {
+      const offset = this._urlOffset(urlIdx);
+      const dv = await this._readRange(offset, 1024);
+      const bytes = new Uint8Array(dv.buffer);
+
+      const mimeType = dv.getUint16(0, true);
+      const namespace = String.fromCharCode(dv.getUint8(3));
+      const isRedirect = mimeType === 0xffff;
+
+      let clusterNum, blobNum, redirectIndex, strStart;
+      if (isRedirect) {
+        redirectIndex = dv.getUint32(8, true);
+        strStart = 12;
+      } else {
+        clusterNum = dv.getUint32(8, true);
+        blobNum    = dv.getUint32(12, true);
+        strStart   = 16;
+      }
+
+      const readStr = (from) => {
+        let end = from;
+        while (end < bytes.length && bytes[end] !== 0) end++;
+        return [new TextDecoder().decode(bytes.slice(from, end)), end + 1];
+      };
+      const [url, titleAt] = readStr(strStart);
+      const [rawTitle]     = readStr(titleAt);
+
+      return {
+        urlIdx, namespace, mimeType,
+        mime: this.mimeTypes[mimeType] ?? 'application/octet-stream',
+        clusterNum, blobNum, redirectIndex,
+        url, title: rawTitle || url, isRedirect,
+      };
+    }
+
+    async getEntryByTitleIdx(i) {
+      return this.readDirEntry(this.titlePtrs[i]);
+    }
+
+    // Binary search on URL-sorted list to find entry by namespace+url
+    async findByUrl(namespace, url) {
+      const target = namespace + url;
+      let lo = 0, hi = this.header.articleCount - 1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        const e = await this.readDirEntry(mid);
+        const key = e.namespace + e.url;
+        if (key === target) return e;
+        if (key < target) lo = mid + 1; else hi = mid - 1;
+      }
+      return null;
+    }
+
+    // Scan title-sorted list for namespace-A articles matching query
+    async scanTitles(query, start, limit) {
+      const q = query.toLowerCase();
+      const results = [];
+      const total = this.header.articleCount;
+      const maxScan = query ? 8000 : limit * 4;
+      let i = start, scanned = 0;
+      while (i < total && results.length < limit && scanned < maxScan) {
+        const entry = await this.getEntryByTitleIdx(i);
+        i++; scanned++;
+        if (entry.namespace !== 'A') continue;
+        if (!query || entry.title.toLowerCase().includes(q))
+          results.push({ titleIdx: i - 1, entry });
+      }
+      return { results, nextStart: i };
+    }
+
+    async _clusterOffset(n) {
+      const dv = await this._readRange(this.header.clusterPtrPos + n * 8, 8);
+      return this._u64(dv, 0);
+    }
+
+    async _inflate(data) {
+      const ds = new DecompressionStream('deflate-raw');
+      const w = ds.writable.getWriter();
+      w.write(data); w.close();
+      const chunks = [];
+      const r = ds.readable.getReader();
+      for (;;) { const { done, value } = await r.read(); if (done) break; chunks.push(value); }
+      const out = new Uint8Array(chunks.reduce((s, c) => s + c.length, 0));
+      let p = 0; for (const c of chunks) { out.set(c, p); p += c.length; }
+      return out;
+    }
+
+    async _decompress(type, data) {
+      if (type === 0 || type === 1) return data;
+      if (type === 4) return this._inflate(data);
+      if (type === 7) {
+        if (typeof fzstd === 'undefined') {
+          await new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/fzstd@0.1.0/umd/index.js';
+            s.onload = res;
+            s.onerror = () => rej(new Error('Could not load zstd library — connect to the internet once to enable zstd ZIM support'));
+            document.head.appendChild(s);
+          });
+        }
+        return fzstd.decompress(data);
+      }
+      if (type === 5) throw new Error('bzip2 compression is not supported');
+      if (type === 6) throw new Error('xz/lzma compression is not supported — use a zstd or zlib ZIM file');
+      throw new Error(`Unknown cluster compression type: ${type}`);
+    }
+
+    _parseBlobs(data, extended) {
+      const os = extended ? 8 : 4;
+      const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+      const getOff = (i) => extended ? this._u64(dv, i * os) : dv.getUint32(i * os, true);
+      const count = Math.floor(getOff(0) / os) - 1;
+      return Array.from({ length: count }, (_, i) => data.slice(getOff(i), getOff(i + 1)));
+    }
+
+    async readBlob(clusterNum, blobNum) {
+      const off = await this._clusterOffset(clusterNum);
+      const isLast = clusterNum + 1 >= this.header.clusterCount;
+      const nextOff = isLast
+        ? this.header.checksumPos
+        : await this._clusterOffset(clusterNum + 1);
+      const size = Math.min(nextOff - off, 128 * 1024 * 1024);
+      const raw  = new Uint8Array(await this.file.slice(off, off + size).arrayBuffer());
+      const type = raw[0] & 0x0f;
+      const ext  = !!(raw[0] & 0x10);
+      const data = await this._decompress(type, raw.slice(1));
+      const blobs = this._parseBlobs(data, ext);
+      if (blobNum >= blobs.length)
+        throw new Error(`Blob ${blobNum} out of range (cluster has ${blobs.length})`);
+      return blobs[blobNum];
+    }
+
+    async getArticle(urlIdx) {
+      let entry = await this.readDirEntry(urlIdx);
+      for (let i = 0; i < 10 && entry.isRedirect; i++)
+        entry = await this.readDirEntry(entry.redirectIndex);
+      if (entry.isRedirect) throw new Error('Redirect loop detected');
+      const data = await this.readBlob(entry.clusterNum, entry.blobNum);
+      return entry.mime.startsWith('text/')
+        ? { text: new TextDecoder().decode(data), mime: entry.mime, entry }
+        : { blob: new Blob([data], { type: entry.mime }), mime: entry.mime, entry };
+    }
+  }
+
+  // ── Library state & DOM refs ──
+  let zimReader = null;
+  let zimTitleOffset = 0;
+  let zimSearchQuery = '';
+
+  const zimDropzone     = $('#zim-dropzone');
+  const zimLoadingEl    = $('#zim-loading');
+  const zimLoadingMsg   = $('#zim-loading-msg');
+  const zimContentEl    = $('#zim-content');
+  const zimFileInput    = $('#zim-file-input');
+  const zimNameEl       = $('#zim-name');
+  const zimStatsEl      = $('#zim-stats');
+  const zimCloseBtn     = $('#zim-close-btn');
+  const zimBrowseEl     = $('#zim-browse');
+  const zimSearchInput  = $('#zim-search');
+  const zimArticleList  = $('#zim-article-list');
+  const zimLoadMoreBtn  = $('#zim-load-more');
+  const zimArticleView  = $('#zim-article-view');
+  const zimBackBtn      = $('#zim-back-btn');
+  const zimArticleTitle = $('#zim-article-title-text');
+  const zimFrame        = $('#zim-frame');
+  const zimErrorEl      = $('#zim-error');
+
+  function _zimShow(state) {
+    const hasContent = state === 'browse' || state === 'article';
+    zimDropzone.classList.toggle('hidden', state !== 'drop');
+    zimLoadingEl.classList.toggle('hidden', state !== 'loading');
+    zimContentEl.classList.toggle('hidden', !hasContent);
+    if (hasContent) {
+      zimBrowseEl.classList.toggle('hidden', state !== 'browse');
+      zimArticleView.classList.toggle('hidden', state !== 'article');
+    }
+    zimErrorEl.classList.add('hidden');
+  }
+
+  function _zimError(msg) {
+    zimErrorEl.textContent = msg;
+    zimErrorEl.classList.remove('hidden');
+  }
+
+  async function zimOpenFile(file) {
+    _zimShow('loading');
+    zimLoadingMsg.textContent = 'Reading header…';
+    try {
+      const reader = new ZimReader(file);
+      await reader.init(msg => { zimLoadingMsg.textContent = msg; });
+      zimReader = reader;
+      zimNameEl.textContent = file.name.replace(/\.zim$/i, '').replace(/[_-]+/g, ' ');
+      zimStatsEl.textContent = `${reader.header.articleCount.toLocaleString()} articles`;
+      zimSearchQuery = '';
+      zimSearchInput.value = '';
+      _zimShow('browse');
+      await _zimRenderList(true);
+    } catch (err) {
+      _zimShow('drop');
+      _zimError(`Failed to open: ${err.message}`);
+    }
+  }
+
+  async function _zimRenderList(reset = false) {
+    if (reset) {
+      zimArticleList.textContent = '';
+      const loading = document.createElement('p');
+      loading.className = 'empty-msg';
+      loading.style.padding = '12px 0';
+      loading.textContent = 'Loading…';
+      zimArticleList.appendChild(loading);
+      zimTitleOffset = 0;
+    }
+    const { results, nextStart } = await zimReader.scanTitles(zimSearchQuery, zimTitleOffset, 25);
+    zimTitleOffset = nextStart;
+
+    if (reset) zimArticleList.textContent = '';
+    if (results.length === 0 && !zimArticleList.children.length) {
+      const msg = document.createElement('p');
+      msg.className = 'empty-msg';
+      msg.style.padding = '12px 0';
+      msg.textContent = 'No articles found';
+      zimArticleList.appendChild(msg);
+      zimLoadMoreBtn.classList.add('hidden');
+      return;
+    }
+
+    for (const { entry } of results) {
+      const item = document.createElement('div');
+      item.className = 'zim-article-item';
+      const titleEl = document.createElement('div');
+      titleEl.className = 'zim-ai-title';
+      titleEl.textContent = entry.title;
+      const urlEl = document.createElement('div');
+      urlEl.className = 'zim-ai-url';
+      urlEl.textContent = `${entry.namespace}/${entry.url}`;
+      item.append(titleEl, urlEl);
+      item.addEventListener('click', () => _zimOpenArticle(entry));
+      zimArticleList.appendChild(item);
+    }
+    zimLoadMoreBtn.classList.toggle('hidden', nextStart >= zimReader.header.articleCount);
+  }
+
+  async function _zimOpenArticle(entry) {
+    _zimShow('loading');
+    zimLoadingMsg.textContent = `Loading "${entry.title}"…`;
+    try {
+      const { text, blob, entry: resolved } = await zimReader.getArticle(entry.urlIdx);
+      zimArticleTitle.textContent = resolved.title;
+
+      if (text != null) {
+        // Strip scripts and event handlers; render in sandboxed iframe (no allow-scripts)
+        const clean = text
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/\s+on\w+\s*=\s*"[^"]*"/gi, '')
+          .replace(/\s+on\w+\s*=\s*'[^']*'/gi, '');
+
+        const injectStyle = `<style>
+          html,body{background:#0a0c14;color:#eaeaea;font-family:-apple-system,sans-serif;
+            margin:0;padding:12px;line-height:1.6;font-size:15px}
+          a{color:#ff6b35}img{max-width:100%;height:auto}
+          table{border-collapse:collapse;max-width:100%;font-size:.85em}
+          td,th{border:1px solid #2a2d3e;padding:4px 8px}
+          pre,code{background:#1c2030;border-radius:4px;padding:2px 5px;font-size:.85em}
+          h1{font-size:1.3em}h2{font-size:1.1em}h3{font-size:1em}
+          h1,h2,h3{margin:.8em 0 .3em}p{margin-bottom:.6em}
+        </style>`;
+
+        const html = /<html[\s>]/i.test(clean)
+          ? clean.replace(/<head(\s[^>]*)?>/i, m => m + injectStyle)
+          : `<html><head>${injectStyle}</head><body>${clean}</body></html>`;
+
+        // Render in sandboxed iframe (allow-same-origin only; no allow-scripts)
+        zimFrame.srcdoc = html;
+        zimFrame.onload = () => {
+          try {
+            zimFrame.contentDocument.addEventListener('click', e => {
+              const a = e.target.closest('a[href]');
+              if (!a) return;
+              e.preventDefault();
+              _zimHandleLink(a.getAttribute('href'));
+            });
+          } catch { /* sandboxed */ }
+        };
+      } else {
+        zimFrame.srcdoc = '';
+        zimFrame.src = URL.createObjectURL(blob);
+      }
+      _zimShow('article');
+    } catch (err) {
+      _zimShow('browse');
+      _zimError(`Failed to load article: ${err.message}`);
+    }
+  }
+
+  async function _zimHandleLink(href) {
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    if (/^https?:\/\//i.test(href)) { window.open(href, '_blank', 'noopener'); return; }
+
+    // Strip leading '../' hops → "Namespace/Url" format
+    const path = href.replace(/^(\.\.\/|\.\/)+/, '');
+    const slash = path.indexOf('/');
+    if (slash < 0) return;
+    const ns  = path.slice(0, slash);
+    const url = decodeURIComponent(path.slice(slash + 1)).replace(/ /g, '_');
+
+    _zimShow('loading');
+    zimLoadingMsg.textContent = 'Navigating…';
+    try {
+      const found = await zimReader.findByUrl(ns, url);
+      if (!found) throw new Error(`Not found in ZIM: ${ns}/${url}`);
+      await _zimOpenArticle(found);
+    } catch (err) {
+      _zimShow('article');
+      _zimError(`Link error: ${err.message}`);
+    }
+  }
+
+  // Library event listeners
+  zimFileInput.addEventListener('change', e => { if (e.target.files[0]) zimOpenFile(e.target.files[0]); });
+
+  zimDropzone.addEventListener('dragover', e => { e.preventDefault(); zimDropzone.classList.add('zim-drag-over'); });
+  zimDropzone.addEventListener('dragleave', () => zimDropzone.classList.remove('zim-drag-over'));
+  zimDropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    zimDropzone.classList.remove('zim-drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f?.name.toLowerCase().endsWith('.zim')) zimOpenFile(f);
+    else _zimError('Please drop a .zim file');
+  });
+
+  zimCloseBtn.addEventListener('click', () => { zimReader = null; zimFrame.srcdoc = ''; _zimShow('drop'); });
+  zimBackBtn.addEventListener('click', () => _zimShow('browse'));
+  zimLoadMoreBtn.addEventListener('click', () => _zimRenderList(false));
+
+  let _zimSearchTimer;
+  zimSearchInput.addEventListener('input', () => {
+    clearTimeout(_zimSearchTimer);
+    _zimSearchTimer = setTimeout(() => {
+      zimSearchQuery = zimSearchInput.value.trim();
+      _zimRenderList(true);
+    }, 300);
+  });
+
   // ──────────── Init ────────────
   loadState();
   refreshHome();

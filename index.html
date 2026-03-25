@@ -169,6 +169,63 @@
     </div>
   </section>
 
+  <!-- LIBRARY PAGE -->
+  <section id="page-library" class="page">
+    <header class="page-header">
+      <h1>&#128218; Library</h1>
+      <span class="subtitle">Offline ZIM file reader</span>
+    </header>
+
+    <!-- File drop zone -->
+    <div id="zim-dropzone" class="zim-dropzone">
+      <div class="zim-drop-icon">&#128194;</div>
+      <p class="zim-drop-title">Open a ZIM File</p>
+      <p class="zim-drop-hint">ZIM files let you read Wikipedia, first aid guides, and other references completely offline. Download them from kiwix.org.</p>
+      <label class="btn-primary zim-pick-label">
+        &#128194; Choose File
+        <input type="file" id="zim-file-input" accept=".zim" style="display:none" />
+      </label>
+    </div>
+
+    <!-- Loading state -->
+    <div id="zim-loading" class="zim-loading hidden">
+      <div class="zim-spinner"></div>
+      <p id="zim-loading-msg">Opening ZIM file&hellip;</p>
+    </div>
+
+    <!-- ZIM content (browse + article) -->
+    <div id="zim-content" class="zim-content hidden">
+      <div class="zim-info-bar">
+        <div>
+          <div id="zim-name" class="zim-name"></div>
+          <div id="zim-stats" class="zim-stats"></div>
+        </div>
+        <button id="zim-close-btn" class="zim-close-btn" title="Close ZIM">&#10005;</button>
+      </div>
+
+      <div id="zim-error" class="zim-error hidden"></div>
+
+      <!-- Browse / search view -->
+      <div id="zim-browse" class="hidden">
+        <div class="zim-search-wrap">
+          <input type="search" id="zim-search" class="zim-search-input"
+                 placeholder="Search articles&hellip;" autocomplete="off" />
+        </div>
+        <div id="zim-article-list" class="zim-article-list"></div>
+        <button id="zim-load-more" class="btn-secondary zim-load-more hidden">Load more&hellip;</button>
+      </div>
+
+      <!-- Article view -->
+      <div id="zim-article-view" class="zim-article-view hidden">
+        <div class="zim-article-topbar">
+          <button id="zim-back-btn" class="btn-secondary">&#8592; Back</button>
+          <span id="zim-article-title-text" class="zim-article-title"></span>
+        </div>
+        <iframe id="zim-frame" class="zim-frame" sandbox="allow-same-origin"></iframe>
+      </div>
+    </div>
+  </section>
+
   <!-- ==================== BOTTOM NAV BAR ==================== -->
   <nav id="bottom-nav">
     <button class="nav-btn active" data-target="page-home">
@@ -190,6 +247,10 @@
     <button class="nav-btn" data-target="page-chat">
       <span class="nav-icon">&#129302;</span>
       <span class="nav-label">AI Chat</span>
+    </button>
+    <button class="nav-btn" data-target="page-library">
+      <span class="nav-icon">&#128218;</span>
+      <span class="nav-label">Library</span>
     </button>
   </nav>
 

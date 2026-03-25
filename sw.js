@@ -4,7 +4,7 @@
    (Map is fully canvas-based – no tiles needed)
    ============================================ */
 
-const CACHE_NAME = "emergency-hub-v9";
+const CACHE_NAME = "emergency-hub-v10";
 
 // App shell files to pre-cache on install
 const APP_SHELL = [
@@ -52,7 +52,7 @@ self.addEventListener("fetch", (e) => {
     caches.match(e.request).then((cached) => {
       if (cached) return cached;
       return fetch(e.request).then((response) => {
-        if (response.ok && (url.origin === self.location.origin || url.hostname === "unpkg.com")) {
+        if (response.ok && (url.origin === self.location.origin || url.hostname === "unpkg.com" || url.hostname === "cdn.jsdelivr.net")) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
         }

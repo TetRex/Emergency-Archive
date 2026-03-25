@@ -822,3 +822,170 @@ html, body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+
+/* ==================== LIBRARY / ZIM PAGE ==================== */
+.hidden { display: none !important; }
+
+.zim-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 40px 24px;
+  border: 2px dashed var(--clr-border);
+  border-radius: var(--radius);
+  text-align: center;
+  flex: 1;
+  transition: border-color .2s, background .2s;
+}
+.zim-dropzone.zim-drag-over {
+  border-color: var(--clr-primary);
+  background: rgba(255,107,53,.06);
+}
+.zim-drop-icon { font-size: 52px; }
+.zim-drop-title { font-size: 1.15rem; font-weight: 700; }
+.zim-drop-hint {
+  font-size: 0.85rem;
+  color: var(--clr-text-dim);
+  line-height: 1.5;
+  max-width: 320px;
+}
+.zim-pick-label {
+  display: inline-block;
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-end));
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.zim-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex: 1;
+  color: var(--clr-text-dim);
+}
+.zim-spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--clr-border);
+  border-top-color: var(--clr-primary);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.zim-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  min-height: 0;
+}
+.zim-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  flex-shrink: 0;
+}
+.zim-name { font-weight: 700; font-size: 0.95rem; }
+.zim-stats { font-size: 0.78rem; color: var(--clr-text-dim); margin-top: 2px; }
+.zim-close-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--clr-text-dim); font-size: 1.1rem; padding: 4px 8px;
+  border-radius: 4px; line-height: 1;
+}
+.zim-close-btn:hover { color: var(--clr-text); }
+
+.zim-error {
+  background: rgba(230,57,70,.12);
+  border: 1px solid rgba(230,57,70,.4);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: var(--clr-danger);
+  flex-shrink: 0;
+}
+
+#zim-browse {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  min-height: 0;
+}
+.zim-search-wrap { flex-shrink: 0; }
+.zim-search-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--clr-border);
+  background: var(--clr-card);
+  color: var(--clr-text);
+  font-size: 0.93rem;
+  outline: none;
+  font-family: inherit;
+}
+.zim-search-input:focus { border-color: var(--clr-primary); }
+
+.zim-article-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.zim-article-item {
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.zim-article-item:hover, .zim-article-item:active {
+  border-color: var(--clr-primary);
+  background: var(--clr-card-hover);
+}
+.zim-ai-title { font-weight: 600; font-size: 0.9rem; }
+.zim-ai-url { font-size: 0.75rem; color: var(--clr-text-dim); margin-top: 3px; }
+.zim-load-more { align-self: center; margin-top: 4px; flex-shrink: 0; }
+
+.zim-article-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  min-height: 0;
+}
+.zim-article-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.zim-article-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.zim-frame {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: #0a0c14;
+  min-height: 0;
+}
