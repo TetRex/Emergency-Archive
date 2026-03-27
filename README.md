@@ -1,6 +1,6 @@
 # ⚠️ Emergency Archive
 This project was completed as part of the course "Browser Programming" at the Savonia University of Applied Sciences.
-A fully offline-capable emergency preparedness web app. Once loaded, it works without any internet connection — maps, AI chat, voice input, and all scenario guides run entirely on-device.
+A fully offline-capable emergency preparedness web app. It works without any internet connection — maps, AI chat, voice input, and all scenario guides run entirely on-device.
 
 ---
 
@@ -69,47 +69,17 @@ Each guide is presented as a numbered checklist — tap a step to mark it comple
 
 ---
 
-## Getting Started
+## Running
 
-
-
-### 1. Install Ollama (for AI Chat)
-
-Ollama runs large language models locally. The AI Chat feature requires it.
-
-#### macOS
+The app is pre-installed on the device. Serve the static files and open the app in a browser:
 
 ```bash
-brew install ollama
+python3 -m http.server 8000
 ```
 
-Or download the installer from [ollama.com/download](https://ollama.com/download) and drag the app to your Applications folder.
+Then navigate to `http://localhost:8000`.
 
-#### Linux
-
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-```
-
-#### Windows
-
-Download and run the installer from [ollama.com/download](https://ollama.com/download).
-
----
-
-### 2. Pull a model and start the server
-
-```bash
-# Pull a model (llama3.2 is a good default; ~2 GB)
-ollama pull llama3.2
-
-# Start the Ollama server (runs on http://localhost:11434)
-ollama serve
-```
-
-Then open the **AI Chat** page in the app — it will detect the running model automatically.
-
-> **Tip:** Any model listed by `ollama list` will appear in the model selector. Smaller models like `llama3.2` or `phi3` respond faster on modest hardware.
+Ollama is pre-installed and runs automatically on the device at `http://localhost:11434`. The AI Chat page will detect available models automatically.
 
 ---
 
