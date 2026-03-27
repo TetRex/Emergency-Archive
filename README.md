@@ -18,8 +18,6 @@ A fully offline-capable emergency preparedness web app. It works without any int
 |:---:|
 | ![Home dashboard](.github/assets//Screenshot%202026-02-26%20at%2015.40.09.png) |
 
----
-
 ## Features
 
 ### 🏠 Dashboard
