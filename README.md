@@ -1,6 +1,6 @@
 # ⚠️ Emergency Archive
 This project was completed as part of the course "Browser Programming" at the Savonia University of Applied Sciences.
-A fully offline-capable emergency preparedness Progressive Web App (PWA). Once loaded, it works without any internet connection — maps, AI chat, voice input, and all scenario guides run entirely on-device.
+A fully offline-capable emergency preparedness web app. Once loaded, it works without any internet connection — maps, AI chat, voice input, and all scenario guides run entirely on-device.
 
 ---
 
@@ -63,7 +63,6 @@ Each guide is presented as a numbered checklist — tap a step to mark it comple
 ├── index.html          # App shell & all page markup
 ├── app.js              # All application logic (map, POIs, timers, chat, voice)
 ├── styles.css          # Styles
-├── sw.js               # Service Worker (app shell caching)
 ├── whisper-worker.js   # Web Worker for offline speech-to-text (Whisper)
 └── finland.pmtiles     # Bundled offline vector map for Finland
 ```
