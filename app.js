@@ -501,19 +501,6 @@
     } catch {}
   }
 
-  // ──────────── Service Worker (app shell only) ────────────
-  const offlineBadge = $("#offline-badge");
-  function updateOnlineStatus() {
-    offlineBadge.classList.toggle("hidden", navigator.onLine);
-  }
-  window.addEventListener("online", updateOnlineStatus);
-  window.addEventListener("offline", updateOnlineStatus);
-  updateOnlineStatus();
-
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
-  }
-
   // ──────────── Emergency Scenarios ────────────
   const SCENARIOS = [
     {

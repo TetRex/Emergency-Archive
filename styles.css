@@ -492,26 +492,6 @@ html, body {
   .scenario-categories { grid-template-columns: 1fr 1fr !important; }
 }
 
-/* ---------- Offline badge ---------- */
-.offline-badge {
-  position: fixed;
-  top: 12px; left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, var(--clr-danger), #b52833);
-  color: #fff;
-  padding: 7px 20px;
-  border-radius: 100px;
-  font-size: 0.8rem; font-weight: 700;
-  z-index: 9999;
-  box-shadow: 0 4px 18px rgba(230,57,70,.5);
-  letter-spacing: .4px;
-  animation: pulse-badge 2.2s infinite;
-}
-.offline-badge.hidden { display: none; }
-@keyframes pulse-badge {
-  0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
-  50% { opacity: .8; transform: translateX(-50%) scale(.97); }
-}
 
 /* ---------- Map offline tag ---------- */
 .map-offline-tag {
