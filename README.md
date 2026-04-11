@@ -61,23 +61,8 @@ Each guide is presented as a numbered checklist — tap a step to mark it comple
 ├── index.html          # App shell & all page markup
 ├── app.js              # All application logic (map, POIs, timers, chat, voice)
 ├── styles.css          # Styles
-├── whisper-worker.js   # Web Worker for offline speech-to-text (Whisper)
 └── finland.pmtiles     # Bundled offline vector map for Finland
 ```
-
----
-
-## Running
-
-The app is pre-installed on the device. Serve the static files and open the app in a browser:
-
-```bash
-python3 -m http.server 8000
-```
-
-Then navigate to `http://localhost:8000`.
-
-Ollama is pre-installed and runs automatically on the device at `http://localhost:11434`. The AI Chat page will detect available models automatically.
 
 ---
 
