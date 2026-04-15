@@ -47,6 +47,9 @@
 
   // ──────────── Navigation ────────────
   function navigateTo(pageId) {
+    if (pageId !== "page-chat" && (voiceRecording || voiceFinalizing)) {
+      stopVoiceInput(true);
+    }
     pages.forEach(p => p.classList.toggle("active", p.id === pageId));
     navBtns.forEach(b => b.classList.toggle("active", b.dataset.target === pageId));
     if (pageId === "page-map") {
@@ -588,6 +591,8 @@
 
   // ──────────── AI Chat (Ollama) ────────────
   const OLLAMA_BASE = "http://localhost:11434";
+  const VOSK_MODEL_URL = "./data/models/vosk-model-small-en-us-0.15.tar.gz";
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   const SYSTEM_PROMPT = `You are an expert emergency preparedness assistant embedded in an offline mobile app called Emergency Hub.
 Provide clear, concise, actionable advice on first aid, survival, evacuation, natural disasters, and emergency procedures.
 Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never recommend illegal actions.`;
@@ -598,10 +603,28 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   const chatInput       = $("#chat-input");
   const chatSendBtn     = $("#chat-send-btn");
   const chatClearBtn    = $("#chat-clear-btn");
+  const chatVoiceBtn    = $("#chat-voice-btn");
+  const chatVoiceStatus = $("#chat-voice-status");
 
   let chatHistory = [];
   let chatReady   = false;
   let chatInited  = false;
+  let chatSending = false;
+
+  const voiceSupported = !!(window.Vosk && navigator.mediaDevices?.getUserMedia && AudioContextClass);
+  let voiceModelPromise = null;
+  let voiceModel = null;
+  let voiceRecognizer = null;
+  let voiceAudioContext = null;
+  let voiceStream = null;
+  let voiceSourceNode = null;
+  let voiceProcessorNode = null;
+  let voiceMuteNode = null;
+  let voiceRecording = false;
+  let voiceFinalizing = false;
+  let voiceDraftPrefix = "";
+  let voiceTranscriptSegments = [];
+  let voicePartialTranscript = "";
 
   async function chatInit() {
     if (chatInited) return;
@@ -620,6 +643,212 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
       chatStatusEl.textContent = "● Offline";
       chatStatusEl.className = "chat-status chat-status--offline";
     }
+  }
+
+  function resizeChatInput() {
+    chatInput.style.height = "auto";
+    chatInput.style.height = chatInput.scrollHeight + "px";
+  }
+
+  function setChatVoiceStatus(message, tone = "info") {
+    if (!message) {
+      chatVoiceStatus.textContent = "";
+      chatVoiceStatus.className = "chat-voice-status hidden";
+      return;
+    }
+    chatVoiceStatus.textContent = message;
+    chatVoiceStatus.className = `chat-voice-status chat-voice-status--${tone}`;
+  }
+
+  function syncChatControls() {
+    chatSendBtn.disabled = chatSending || voiceRecording || voiceFinalizing;
+    chatVoiceBtn.disabled = !voiceSupported || chatSending || voiceFinalizing;
+    chatVoiceBtn.classList.toggle("is-recording", voiceRecording);
+    chatVoiceBtn.title = voiceRecording ? "Stop voice input" : "Start voice input";
+    chatVoiceBtn.setAttribute("aria-pressed", voiceRecording ? "true" : "false");
+  }
+
+  function buildVoiceDraft() {
+    const spoken = [...voiceTranscriptSegments, voicePartialTranscript]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    if (!voiceDraftPrefix) return spoken;
+    if (!spoken) return voiceDraftPrefix;
+
+    return `${voiceDraftPrefix}${/\s$/.test(voiceDraftPrefix) ? "" : " "}${spoken}`;
+  }
+
+  function updateVoiceDraft() {
+    chatInput.value = buildVoiceDraft();
+    resizeChatInput();
+  }
+
+  function cleanupVoiceResources() {
+    if (voiceProcessorNode) {
+      voiceProcessorNode.onaudioprocess = null;
+      try { voiceProcessorNode.disconnect(); } catch {}
+      voiceProcessorNode = null;
+    }
+    if (voiceSourceNode) {
+      try { voiceSourceNode.disconnect(); } catch {}
+      voiceSourceNode = null;
+    }
+    if (voiceMuteNode) {
+      try { voiceMuteNode.disconnect(); } catch {}
+      voiceMuteNode = null;
+    }
+    if (voiceStream) {
+      voiceStream.getTracks().forEach(track => track.stop());
+      voiceStream = null;
+    }
+    if (voiceAudioContext) {
+      voiceAudioContext.close().catch(() => {});
+      voiceAudioContext = null;
+    }
+    if (voiceRecognizer) {
+      try { voiceRecognizer.remove(); } catch {}
+      voiceRecognizer = null;
+    }
+    voiceRecording = false;
+    voiceFinalizing = false;
+    syncChatControls();
+  }
+
+  async function loadVoiceModel() {
+    if (voiceModel) return voiceModel;
+    if (!voiceSupported) throw new Error("Voice input is not supported in this browser.");
+
+    if (!voiceModelPromise) {
+      setChatVoiceStatus("Loading offline voice model...", "info");
+      voiceModelPromise = window.Vosk.createModel(VOSK_MODEL_URL)
+        .then((model) => {
+          voiceModel = model;
+          model.on("error", (message) => {
+            console.error("Vosk model error:", message.error);
+            setChatVoiceStatus("Offline voice model error.", "error");
+          });
+          return model;
+        })
+        .catch((err) => {
+          voiceModelPromise = null;
+          throw err;
+        });
+    }
+
+    const model = await voiceModelPromise;
+    setChatVoiceStatus("Offline voice ready.", "success");
+    return model;
+  }
+
+  async function startVoiceInput() {
+    if (!voiceSupported || voiceRecording || voiceFinalizing) return;
+
+    try {
+      const model = await loadVoiceModel();
+
+      setChatVoiceStatus("Requesting microphone access...", "info");
+      voiceStream = await navigator.mediaDevices.getUserMedia({
+        video: false,
+        audio: {
+          channelCount: 1,
+          sampleRate: 16000,
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      });
+
+      voiceAudioContext = new AudioContextClass({ sampleRate: 16000 });
+      await voiceAudioContext.resume();
+
+      voiceRecognizer = new model.KaldiRecognizer(16000);
+      voiceDraftPrefix = chatInput.value.trim();
+      voiceTranscriptSegments = [];
+      voicePartialTranscript = "";
+
+      voiceRecognizer.on("result", (message) => {
+        const text = message.result?.text?.trim();
+        if (text) voiceTranscriptSegments.push(text);
+        voicePartialTranscript = "";
+        updateVoiceDraft();
+      });
+
+      voiceRecognizer.on("partialresult", (message) => {
+        voicePartialTranscript = message.result?.partial?.trim() || "";
+        updateVoiceDraft();
+      });
+
+      voiceRecognizer.on("error", (message) => {
+        console.error("Vosk recognizer error:", message.error);
+        setChatVoiceStatus("Voice recognition failed.", "error");
+        stopVoiceInput(true);
+      });
+
+      voiceSourceNode = voiceAudioContext.createMediaStreamSource(voiceStream);
+      voiceProcessorNode = voiceAudioContext.createScriptProcessor(4096, 1, 1);
+      voiceMuteNode = voiceAudioContext.createGain();
+      voiceMuteNode.gain.value = 0;
+
+      voiceProcessorNode.onaudioprocess = (event) => {
+        if (!voiceRecognizer) return;
+        try {
+          voiceRecognizer.acceptWaveform(event.inputBuffer);
+        } catch (err) {
+          console.error("Voice waveform processing failed:", err);
+          setChatVoiceStatus("Voice processing failed.", "error");
+          stopVoiceInput(true);
+        }
+      };
+
+      voiceSourceNode.connect(voiceProcessorNode);
+      voiceProcessorNode.connect(voiceMuteNode);
+      voiceMuteNode.connect(voiceAudioContext.destination);
+
+      voiceRecording = true;
+      syncChatControls();
+      setChatVoiceStatus("Listening... tap the mic again to stop.", "recording");
+    } catch (err) {
+      cleanupVoiceResources();
+      if (err?.name === "NotAllowedError") {
+        setChatVoiceStatus("Microphone access was denied.", "error");
+      } else {
+        setChatVoiceStatus("Could not start offline voice input.", "error");
+      }
+      console.error("Voice input start failed:", err);
+    }
+  }
+
+  async function stopVoiceInput(abort = false) {
+    if ((!voiceRecording && !voiceFinalizing) || !voiceRecognizer) {
+      cleanupVoiceResources();
+      return;
+    }
+
+    voiceRecording = false;
+    voiceFinalizing = !abort;
+    syncChatControls();
+
+    if (abort) {
+      cleanupVoiceResources();
+      setChatVoiceStatus("Voice input stopped.", "info");
+      return;
+    }
+
+    setChatVoiceStatus("Finishing transcription...", "info");
+    try {
+      voiceRecognizer.retrieveFinalResult();
+    } catch {}
+
+    await new Promise(resolve => setTimeout(resolve, 250));
+
+    const transcript = buildVoiceDraft().trim();
+    cleanupVoiceResources();
+    setChatVoiceStatus(
+      transcript ? "Transcript added to the message." : "No speech was detected.",
+      transcript ? "success" : "info"
+    );
+    chatInput.focus();
   }
 
   // Lightweight markdown → HTML (handles bold, italic, headings, bullets, code)
@@ -682,13 +911,14 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
   async function chatSend() {
     const text = chatInput.value.trim();
-    if (!text || !chatReady) return;
+    if (!text || !chatReady || voiceRecording || voiceFinalizing) return;
     const model = chatModelSelect.value;
     if (!model) return;
 
     chatInput.value = "";
-    chatInput.style.height = "auto";
-    chatSendBtn.disabled = true;
+    resizeChatInput();
+    chatSending = true;
+    syncChatControls();
 
     chatHistory.push({ role: "user", content: text });
     chatAppend("user", text);
@@ -737,24 +967,44 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     }
 
     if (fullReply) chatHistory.push({ role: "assistant", content: fullReply });
-    chatSendBtn.disabled = false;
+    chatSending = false;
+    syncChatControls();
     chatInput.focus();
   }
 
   chatClearBtn.addEventListener("click", () => {
+    if (voiceRecording || voiceFinalizing) stopVoiceInput(true);
     chatHistory = [];
     chatMessagesEl.innerHTML = `<div class="chat-bubble chat-bubble--assistant"><p>Chat cleared. How can I help you?</p></div>`;
+    chatInput.value = "";
+    resizeChatInput();
+    setChatVoiceStatus("", "info");
   });
 
   chatSendBtn.addEventListener("click", chatSend);
+  chatVoiceBtn.addEventListener("click", () => {
+    if (!voiceSupported) {
+      setChatVoiceStatus("Voice input is not supported in this browser.", "error");
+      return;
+    }
+    if (voiceRecording) {
+      stopVoiceInput();
+    } else {
+      startVoiceInput();
+    }
+  });
 
   chatInput.addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); chatSend(); }
   });
   chatInput.addEventListener("input", () => {
-    chatInput.style.height = "auto";
-    chatInput.style.height = chatInput.scrollHeight + "px";
+    resizeChatInput();
   });
+
+  if (!voiceSupported) {
+    setChatVoiceStatus("Voice input is not supported in this browser.", "error");
+  }
+  syncChatControls();
 
   // ──────────── ZIM Library ────────────
 

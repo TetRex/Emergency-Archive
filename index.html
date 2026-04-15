@@ -162,10 +162,13 @@
       </div>
     </div>
 
+    <div id="chat-voice-status" class="chat-voice-status hidden" aria-live="polite"></div>
+
     <div class="chat-input-bar">
       <button id="chat-clear-btn" class="chat-clear-btn" title="Clear chat">&#128465;</button>
+      <button id="chat-voice-btn" class="chat-voice-btn" title="Start voice input" aria-label="Start voice input" aria-pressed="false">&#127908;</button>
       <textarea id="chat-input" class="chat-input" rows="1" placeholder="Ask a question…"></textarea>
-<button id="chat-send-btn" class="chat-send-btn" title="Send">&#10148;</button>
+      <button id="chat-send-btn" class="chat-send-btn" title="Send">&#10148;</button>
     </div>
   </section>
 
@@ -238,6 +241,7 @@
   <!-- JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/protomaps-leaflet@5.0.0/dist/protomaps-leaflet.js"></script>
+  <script src="vendor/vosk/vosk.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
