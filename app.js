@@ -78,9 +78,9 @@
   }).setView([60.1699, 24.9384], 10);
   L.control.zoom({ position: "topright" }).addTo(map);
 
-  // Uses the locally bundled finland.pmtiles – zero network requests needed.
+  // Uses the locally bundled PMTiles archive – zero network requests needed.
   const pmLayer = protomapsL.leafletLayer({
-    url: "./finland.pmtiles",
+    url: "./data/pmtiles/finland.pmtiles",
     flavor: "dark",
     lang: "en",
   }).addTo(map);
@@ -502,7 +502,7 @@
   }
 
   // ──────────── Emergency Scenarios ────────────
-  const SCENARIOS_URL = "./scenarios.json";
+  const SCENARIOS_URL = "./data/json/scenarios.json";
   let scenarios = [];
 
   const scenarioCategoriesEl = $("#scenario-categories");
@@ -777,7 +777,7 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   }
 
   const BUNDLED_ZIM = {
-    url:  './wikipedia_en_100_mini_2026-01.zim',
+    url:  "./data/zim/wikipedia_en_100_mini_2026-01.zim",
     name: 'Wikipedia EN — Jan 2026',
   };
 

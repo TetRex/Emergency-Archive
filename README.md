@@ -24,7 +24,7 @@ A fully offline-capable emergency preparedness web app. It works without any int
 A home screen summarising active timers and saved points of interest for a quick situation overview.
 
 ### 🗺️ Offline Map
-- Renders a vector map of **Finland** using a locally bundled `finland.pmtiles` file — zero network tile requests.
+- Renders a vector map of **Finland** using a locally bundled `data/pmtiles/finland.pmtiles` file — zero network tile requests.
 - Powered by [Leaflet](https://leafletjs.com/) and [Protomaps Leaflet](https://github.com/protomaps/protomaps-leaflet).
 - **GPS location tracking** — shows your position with a pulsing dot and accuracy circle.
 - **Points of Interest (POI)** — tap anywhere on the map to pin a location. Categories: Shelter, Water, Medical, Danger Zone, Food, Other. POIs persist across sessions.
@@ -58,10 +58,16 @@ Each guide is presented as a numbered checklist — tap a step to mark it comple
 ## File Structure
 
 ```
-├── index.html          # App shell & all page markup
-├── app.js              # All application logic (map, POIs, timers, chat, voice)
-├── styles.css          # Styles
-└── finland.pmtiles     # Bundled offline vector map for Finland
+├── index.html                   # App shell & all page markup
+├── app.js                       # All application logic (map, POIs, timers, chat, voice)
+├── styles.css                   # Styles
+└── data/
+    ├── json/
+    │   └── scenarios.json       # Scenario guide data
+    ├── pmtiles/
+    │   └── finland.pmtiles      # Bundled offline vector map for Finland
+    └── zim/
+        └── wikipedia_en_100_mini_2026-01.zim
 ```
 
 ---
