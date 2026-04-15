@@ -1281,22 +1281,176 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   }
 
   // ── Library state & DOM refs ──
+  const ZIM_BOOKMARKS_KEY = 'emergencyHubZimBookmarks';
   let zimReader = null;
   let zimTitleOffset = 0;
   let zimSearchQuery = '';
+  let zimBookmarks = [];
+  let zimCurrentEntry = null;
 
   const zimLoadingEl    = $('#zim-loading');
   const zimLoadingMsg   = $('#zim-loading-msg');
   const zimContentEl    = $('#zim-content');
   const zimBrowseEl     = $('#zim-browse');
   const zimSearchInput  = $('#zim-search');
+  const zimSearchClearBtn = $('#zim-search-clear');
+  const zimSearchMeta   = $('#zim-search-meta');
+  const zimBookmarksSection = $('#zim-bookmarks-section');
+  const zimBookmarksList = $('#zim-bookmarks-list');
+  const zimBookmarksClearBtn = $('#zim-bookmarks-clear');
   const zimArticleList  = $('#zim-article-list');
   const zimLoadMoreBtn  = $('#zim-load-more');
   const zimArticleView  = $('#zim-article-view');
   const zimBackBtn      = $('#zim-back-btn');
   const zimArticleTitle = $('#zim-article-title-text');
+  const zimBookmarkBtn  = $('#zim-bookmark-btn');
   const zimFrame        = $('#zim-frame');
   const zimErrorEl      = $('#zim-error');
+
+  function _zimEscapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function _zimHighlightTitle(title, query) {
+    const safeTitle = _zimEscapeHtml(title);
+    if (!query) return safeTitle;
+    const trimmed = query.trim();
+    if (!trimmed) return safeTitle;
+    const escapedQuery = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return safeTitle.replace(new RegExp(`(${escapedQuery})`, 'ig'), '<mark>$1</mark>');
+  }
+
+  function _zimBookmarkId(entry) {
+    return `${entry.namespace}:${entry.url}`;
+  }
+
+  function _zimLoadBookmarks() {
+    try {
+      const raw = localStorage.getItem(ZIM_BOOKMARKS_KEY);
+      const data = raw ? JSON.parse(raw) : [];
+      zimBookmarks = Array.isArray(data) ? data : [];
+    } catch {
+      zimBookmarks = [];
+    }
+  }
+
+  function _zimSaveBookmarks() {
+    try {
+      localStorage.setItem(ZIM_BOOKMARKS_KEY, JSON.stringify(zimBookmarks));
+    } catch {}
+  }
+
+  function _zimIsBookmarked(entry) {
+    return zimBookmarks.some(bookmark => bookmark.id === _zimBookmarkId(entry));
+  }
+
+  function _zimToggleBookmark(entry) {
+    const id = _zimBookmarkId(entry);
+    const index = zimBookmarks.findIndex(bookmark => bookmark.id === id);
+    if (index >= 0) {
+      zimBookmarks.splice(index, 1);
+    } else {
+      zimBookmarks.unshift({
+        id,
+        urlIdx: entry.urlIdx,
+        namespace: entry.namespace,
+        url: entry.url,
+        title: entry.title,
+      });
+    }
+    _zimSaveBookmarks();
+    _zimRenderBookmarks();
+    _zimUpdateBookmarkButton();
+  }
+
+  function _zimUpdateBookmarkButton() {
+    if (!zimCurrentEntry) {
+      zimBookmarkBtn.classList.add('hidden');
+      zimBookmarkBtn.setAttribute('aria-pressed', 'false');
+      return;
+    }
+    const active = _zimIsBookmarked(zimCurrentEntry);
+    zimBookmarkBtn.classList.remove('hidden');
+    zimBookmarkBtn.innerHTML = active ? '&#9733;' : '&#9734;';
+    zimBookmarkBtn.title = active ? 'Remove bookmark' : 'Save bookmark';
+    zimBookmarkBtn.setAttribute('aria-label', active ? 'Remove bookmark' : 'Save bookmark');
+    zimBookmarkBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    zimBookmarkBtn.classList.toggle('is-active', active);
+  }
+
+  function _zimCreateArticleCard(entry, { query = '', compact = false } = {}) {
+    const card = document.createElement('div');
+    card.className = `zim-article-card${compact ? ' zim-article-card--compact' : ''}`;
+
+    const title = document.createElement('span');
+    title.className = 'zim-article-card-title';
+    title.innerHTML = _zimHighlightTitle(entry.title, query);
+    card.appendChild(title);
+
+    const bookmarkBtn = document.createElement('button');
+    bookmarkBtn.className = `zim-article-bookmark${_zimIsBookmarked(entry) ? ' is-active' : ''}`;
+    bookmarkBtn.type = 'button';
+    bookmarkBtn.innerHTML = _zimIsBookmarked(entry) ? '&#9733;' : '&#9734;';
+    bookmarkBtn.title = _zimIsBookmarked(entry) ? 'Remove bookmark' : 'Save bookmark';
+    bookmarkBtn.setAttribute('aria-label', bookmarkBtn.title);
+    bookmarkBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      _zimToggleBookmark(entry);
+      bookmarkBtn.classList.toggle('is-active', _zimIsBookmarked(entry));
+      bookmarkBtn.innerHTML = _zimIsBookmarked(entry) ? '&#9733;' : '&#9734;';
+      bookmarkBtn.title = _zimIsBookmarked(entry) ? 'Remove bookmark' : 'Save bookmark';
+      bookmarkBtn.setAttribute('aria-label', bookmarkBtn.title);
+      if (compact && !_zimIsBookmarked(entry)) {
+        _zimRenderBookmarks();
+      }
+    });
+    card.appendChild(bookmarkBtn);
+
+    card.addEventListener('click', () => _zimOpenArticle(entry));
+    return card;
+  }
+
+  function _zimRenderBookmarks() {
+    zimBookmarksList.textContent = '';
+    zimBookmarksSection.classList.toggle('hidden', zimBookmarks.length === 0);
+    zimBookmarksClearBtn.classList.toggle('hidden', zimBookmarks.length === 0);
+    if (zimBookmarks.length === 0) return;
+
+    zimBookmarks.slice(0, 8).forEach((bookmark) => {
+      const card = _zimCreateArticleCard({
+        urlIdx: bookmark.urlIdx,
+        namespace: bookmark.namespace,
+        url: bookmark.url,
+        title: bookmark.title,
+      }, { compact: true });
+      zimBookmarksList.appendChild(card);
+    });
+  }
+
+  function _zimUpdateSearchMeta(resultCount = 0, reset = false) {
+    const hasQuery = !!zimSearchQuery;
+    zimSearchClearBtn.classList.toggle('hidden', !hasQuery);
+    if (!zimReader) {
+      zimSearchMeta.textContent = 'Browse offline articles by title or search for a topic.';
+      return;
+    }
+    if (!hasQuery) {
+      zimSearchMeta.textContent = reset
+        ? 'Browse offline articles by title or search for a topic.'
+        : 'Showing offline article titles from the bundled archive.';
+      return;
+    }
+    if (resultCount === 0 && reset) {
+      zimSearchMeta.textContent = `No results for "${zimSearchQuery}". Try a shorter keyword or a broader topic.`;
+      return;
+    }
+    zimSearchMeta.textContent = `Search: "${zimSearchQuery}"${resultCount ? ` — showing ${resultCount} result${resultCount === 1 ? '' : 's'}${zimLoadMoreBtn.classList.contains('hidden') ? '' : ' so far'}` : ''}.`;
+  }
 
   function _zimShow(state) {
     const hasContent = state === 'browse' || state === 'article';
@@ -1321,9 +1475,13 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
       const reader = new ZimReader(file);
       await reader.init(msg => { zimLoadingMsg.textContent = msg; });
       zimReader = reader;
+      _zimLoadBookmarks();
       zimSearchQuery = '';
       zimSearchInput.value = '';
+      zimCurrentEntry = null;
       _zimShow('browse');
+      _zimRenderBookmarks();
+      _zimUpdateBookmarkButton();
       await _zimRenderList(true);
     } catch (err) {
       _zimShow('loading'); // keep spinner hidden, show error over content area
@@ -1342,24 +1500,22 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
     if (reset) zimArticleList.textContent = '';
     if (results.length === 0 && !zimArticleList.children.length) {
-      const msg = document.createElement('p');
-      msg.className = 'empty-msg';
-      msg.textContent = 'No articles found';
+      const msg = document.createElement('div');
+      msg.className = 'zim-empty-state';
+      msg.innerHTML = zimSearchQuery
+        ? `<strong>No articles found</strong><span>Try another keyword, remove punctuation, or search for a broader topic.</span>`
+        : `<strong>Start exploring the offline library</strong><span>Search by title or scroll through the bundled archive.</span>`;
       zimArticleList.appendChild(msg);
       zimLoadMoreBtn.classList.add('hidden');
+      _zimUpdateSearchMeta(0, reset);
       return;
     }
 
     for (const { entry } of results) {
-      const card = document.createElement('div');
-      card.className = 'zim-article-card';
-      const title = document.createElement('span');
-      title.textContent = entry.title;
-      card.appendChild(title);
-      card.addEventListener('click', () => _zimOpenArticle(entry));
-      zimArticleList.appendChild(card);
+      zimArticleList.appendChild(_zimCreateArticleCard(entry, { query: zimSearchQuery }));
     }
     zimLoadMoreBtn.classList.toggle('hidden', nextStart >= zimReader.header.articleCount);
+    _zimUpdateSearchMeta(zimArticleList.querySelectorAll('.zim-article-card').length, reset);
   }
 
   async function _zimOpenArticle(entry) {
@@ -1367,7 +1523,9 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     zimLoadingMsg.textContent = `Loading "${entry.title}"…`;
     try {
       const { text, blob, entry: resolved } = await zimReader.getArticle(entry.urlIdx);
+      zimCurrentEntry = resolved;
       zimArticleTitle.textContent = resolved.title;
+      _zimUpdateBookmarkButton();
 
       if (text != null) {
         // Strip scripts and event handlers; render in sandboxed iframe (no allow-scripts)
@@ -1546,7 +1704,22 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
   // Library event listeners
   zimBackBtn.addEventListener('click', () => _zimShow('browse'));
+  zimBookmarkBtn.addEventListener('click', () => {
+    if (zimCurrentEntry) _zimToggleBookmark(zimCurrentEntry);
+  });
+  zimBookmarksClearBtn.addEventListener('click', () => {
+    zimBookmarks = [];
+    _zimSaveBookmarks();
+    _zimRenderBookmarks();
+    _zimUpdateBookmarkButton();
+  });
   zimLoadMoreBtn.addEventListener('click', () => _zimRenderList(false));
+  zimSearchClearBtn.addEventListener('click', () => {
+    zimSearchInput.value = '';
+    zimSearchQuery = '';
+    _zimRenderList(true);
+    zimSearchInput.focus();
+  });
 
   let _zimSearchTimer;
   zimSearchInput.addEventListener('input', () => {

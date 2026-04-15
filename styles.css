@@ -1083,10 +1083,13 @@ html, body {
   gap: 10px;
   min-height: 0;
 }
-.zim-search-wrap { flex-shrink: 0; }
+.zim-search-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
 .zim-search-input {
   width: 100%;
-  padding: 10px 14px;
+  padding: 10px 42px 10px 14px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--clr-border);
   background: var(--clr-card);
@@ -1096,6 +1099,69 @@ html, body {
   font-family: inherit;
 }
 .zim-search-input:focus { border-color: var(--clr-primary); }
+.zim-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.04);
+  color: var(--clr-text-dim);
+  cursor: pointer;
+}
+.zim-search-clear.hidden {
+  display: none;
+}
+.zim-search-meta {
+  flex-shrink: 0;
+  font-size: 0.79rem;
+  color: var(--clr-text-dim);
+  line-height: 1.45;
+}
+.zim-bookmarks-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--clr-border);
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+}
+.zim-bookmarks-section.hidden {
+  display: none;
+}
+.zim-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.zim-section-header h2 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+.zim-section-header p {
+  font-size: 0.75rem;
+  color: var(--clr-text-dim);
+  margin-top: 3px;
+}
+.zim-mini-btn {
+  min-height: 34px;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+}
+.zim-mini-btn.hidden {
+  display: none;
+}
+.zim-bookmarks-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
 
 .zim-article-grid {
   flex: 1;
@@ -1106,22 +1172,72 @@ html, body {
   align-content: start;
 }
 .zim-article-card {
+  position: relative;
   background: var(--clr-card);
   border: 1px solid var(--clr-border);
   border-radius: var(--radius);
-  padding: 16px 14px;
+  padding: 16px 48px 16px 14px;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
   line-height: 1.4;
   min-height: 72px;
   display: flex;
-  align-items: center;
-  transition: border-color .15s, background .15s;
+  align-items: flex-start;
+  transition: border-color .15s, background .15s, transform .15s;
 }
 .zim-article-card:hover, .zim-article-card:active {
   border-color: var(--clr-primary);
   background: var(--clr-card-hover);
+  transform: translateY(-1px);
+}
+.zim-article-card--compact {
+  min-height: 64px;
+}
+.zim-article-card-title {
+  display: block;
+}
+.zim-article-card-title mark {
+  background: rgba(255,107,53,.22);
+  color: #fff;
+  padding: 0 2px;
+  border-radius: 4px;
+}
+.zim-article-bookmark {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.04);
+  color: var(--clr-text-dim);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.zim-article-bookmark.is-active {
+  color: var(--clr-warning);
+  border-color: rgba(255,209,102,.25);
+  background: rgba(255,209,102,.08);
+}
+.zim-empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 180px;
+  padding: 20px;
+  border: 1px dashed rgba(255,255,255,.1);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--clr-text-dim);
+}
+.zim-empty-state strong {
+  color: var(--clr-text);
+  font-size: 0.95rem;
 }
 .zim-load-more { align-self: center; margin-top: 4px; flex-shrink: 0; grid-column: 1 / -1; }
 
@@ -1145,6 +1261,19 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.zim-bookmark-btn.hidden {
+  display: none;
+}
+.zim-bookmark-btn {
+  min-width: 44px;
+  padding: 0 12px;
+  font-size: 1.05rem;
+}
+.zim-bookmark-btn.is-active {
+  color: var(--clr-warning);
+  border-color: rgba(255,209,102,.25);
+  background: rgba(255,209,102,.08);
 }
 .zim-frame {
   flex: 1;

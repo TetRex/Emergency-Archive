@@ -207,7 +207,19 @@
         <div class="zim-search-wrap">
           <input type="search" id="zim-search" class="zim-search-input"
                  placeholder="Search articles&hellip;" autocomplete="off" />
+          <button id="zim-search-clear" class="zim-search-clear hidden" title="Clear search" aria-label="Clear search">&#10005;</button>
         </div>
+        <div id="zim-search-meta" class="zim-search-meta">Browse offline articles by title or search for a topic.</div>
+        <section id="zim-bookmarks-section" class="zim-bookmarks-section hidden">
+          <div class="zim-section-header">
+            <div>
+              <h2>Bookmarks</h2>
+              <p>Saved locally for quick access.</p>
+            </div>
+            <button id="zim-bookmarks-clear" class="btn-secondary zim-mini-btn hidden">Clear all</button>
+          </div>
+          <div id="zim-bookmarks-list" class="zim-bookmarks-list"></div>
+        </section>
         <div id="zim-article-list" class="zim-article-grid"></div>
         <button id="zim-load-more" class="btn-secondary zim-load-more hidden">Load more&hellip;</button>
       </div>
@@ -217,6 +229,7 @@
         <div class="zim-article-topbar">
           <button id="zim-back-btn" class="btn-secondary">&#8592; Back</button>
           <span id="zim-article-title-text" class="zim-article-title"></span>
+          <button id="zim-bookmark-btn" class="btn-secondary zim-bookmark-btn" title="Save bookmark" aria-label="Save bookmark" aria-pressed="false">&#9734;</button>
         </div>
         <iframe id="zim-frame" class="zim-frame" sandbox="allow-same-origin"></iframe>
       </div>
