@@ -193,6 +193,20 @@ html, body {
   display: flex; justify-content: space-between; align-items: center;
   border: 1px solid var(--clr-border);
 }
+.home-list .home-item-button {
+  width: 100%;
+  cursor: pointer;
+  color: var(--clr-text);
+  text-align: left;
+  font-family: inherit;
+}
+.home-list .home-item-button:hover {
+  background: var(--clr-card-hover);
+  border-color: rgba(255,255,255,.12);
+}
+.home-list .home-item-button:active {
+  transform: scale(.985);
+}
 .home-item .hi-label { font-weight: 600; }
 .home-item .hi-extra { color: var(--clr-text-dim); font-size: 0.76rem; }
 .empty-msg { color: var(--clr-text-dim); font-size: 0.83rem; padding: 8px 0; text-align: center; }

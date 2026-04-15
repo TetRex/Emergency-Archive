@@ -23,6 +23,7 @@
   // Home
   const homeTimersList = $("#home-timers-list");
   const homePoiList    = $("#home-poi-list");
+  const homeLibraryList = $("#home-library-list");
 
   // Map
   const poiModal     = $("#poi-modal");
@@ -427,6 +428,16 @@
   }
 
   // ──────────── Home dashboard ────────────
+  function getStoredZimBookmarks() {
+    try {
+      const raw = localStorage.getItem("emergencyHubZimBookmarks");
+      const data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  }
+
   function refreshHome() {
     // Timers
     const activeTimers = state.timers.filter(t => t.running);
@@ -452,6 +463,22 @@
         div.className = "home-item";
         div.innerHTML = `<span class="hi-label">${categoryIcons[p.category] || "📌"} ${p.name}</span><span class="hi-extra">${p.category}</span>`;
         homePoiList.appendChild(div);
+      });
+    }
+
+    // Library bookmarks
+    const bookmarks = getStoredZimBookmarks();
+    if (bookmarks.length === 0) {
+      homeLibraryList.innerHTML = `<p class="empty-msg">No bookmarked articles</p>`;
+    } else {
+      homeLibraryList.innerHTML = "";
+      bookmarks.slice(0, 6).forEach(bookmark => {
+        const button = document.createElement("button");
+        button.className = "home-item home-item-button";
+        button.type = "button";
+        button.innerHTML = `<span class="hi-label">&#128218; ${bookmark.title}</span><span class="hi-extra">Open</span>`;
+        button.addEventListener("click", () => openLibraryFromBookmark(bookmark));
+        homeLibraryList.appendChild(button);
       });
     }
   }
@@ -1287,6 +1314,7 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   let zimSearchQuery = '';
   let zimBookmarks = [];
   let zimCurrentEntry = null;
+  let zimPendingEntry = null;
 
   const zimLoadingEl    = $('#zim-loading');
   const zimLoadingMsg   = $('#zim-loading-msg');
@@ -1483,10 +1511,31 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
       _zimRenderBookmarks();
       _zimUpdateBookmarkButton();
       await _zimRenderList(true);
+      if (zimPendingEntry) {
+        const pending = zimPendingEntry;
+        zimPendingEntry = null;
+        await _zimOpenArticle(pending);
+      }
     } catch (err) {
       _zimShow('loading'); // keep spinner hidden, show error over content area
       zimContentEl.classList.remove('hidden');
       _zimError(`Failed to open: ${err.message}`);
+    }
+  }
+
+  function openLibraryFromBookmark(bookmark) {
+    const entry = {
+      urlIdx: bookmark.urlIdx,
+      namespace: bookmark.namespace,
+      url: bookmark.url,
+      title: bookmark.title,
+    };
+    navigateTo('page-library');
+    if (zimReader) {
+      _zimOpenArticle(entry);
+    } else {
+      zimPendingEntry = entry;
+      initLibrary();
     }
   }
 
