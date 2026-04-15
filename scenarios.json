@@ -1,0 +1,530 @@
+[
+  {
+    "id": "earthquake",
+    "icon": "🌍",
+    "title": "Earthquake",
+    "color": "#e07b39",
+    "steps": [
+      {
+        "title": "DROP to the ground",
+        "desc": "Get on your hands and knees to prevent being knocked down. This position protects vital organs."
+      },
+      {
+        "title": "Take COVER",
+        "desc": "Get under a sturdy desk or table. If no shelter, cover your head and neck with your arms against an interior wall."
+      },
+      {
+        "title": "HOLD ON",
+        "desc": "Stay under cover until the shaking stops. Be prepared for aftershocks."
+      },
+      {
+        "title": "Evacuate if needed",
+        "desc": "Once shaking stops, check for injuries and hazards. Exit calmly. Do NOT use elevators."
+      },
+      {
+        "title": "Check for damage",
+        "desc": "Look for gas leaks, electrical damage, and structural issues. Turn off utilities if you suspect damage."
+      },
+      {
+        "title": "Contact emergency services",
+        "desc": "Call local emergency number. Use the Timers feature to track response ETA."
+      }
+    ]
+  },
+  {
+    "id": "flood",
+    "icon": "🌊",
+    "title": "Flood",
+    "color": "#457b9d",
+    "steps": [
+      {
+        "title": "Move to higher ground",
+        "desc": "If flooding is imminent, move immediately to higher ground. Do NOT wait for instructions."
+      },
+      {
+        "title": "Avoid walking in water",
+        "desc": "Just 15 cm (6 inches) of moving water can knock you down. Never walk through flowing water."
+      },
+      {
+        "title": "Do NOT drive through floods",
+        "desc": "30 cm of water can float a vehicle. Turn around — don't drown."
+      },
+      {
+        "title": "Disconnect utilities",
+        "desc": "Turn off electricity and gas if safe to do so. Avoid contact with floodwater — it may be contaminated."
+      },
+      {
+        "title": "Signal for help",
+        "desc": "If trapped, go to the highest point. Use a flashlight or bright cloth to signal rescuers."
+      },
+      {
+        "title": "Wait for the all-clear",
+        "desc": "Do not return home until authorities say it is safe. Watch for damaged roads and bridges."
+      }
+    ]
+  },
+  {
+    "id": "tornado",
+    "icon": "🌪️",
+    "title": "Tornado",
+    "color": "#8338ec",
+    "steps": [
+      {
+        "title": "Seek shelter immediately",
+        "desc": "Go to a basement, storm cellar, or the lowest floor of a sturdy building."
+      },
+      {
+        "title": "Go interior",
+        "desc": "Move to an interior room or hallway, away from windows, doors, and exterior walls."
+      },
+      {
+        "title": "Protect yourself",
+        "desc": "Get under a heavy piece of furniture. Cover your head and neck with your arms or a mattress."
+      },
+      {
+        "title": "If outdoors",
+        "desc": "Lie flat in the nearest ditch or low area. Cover your head. Do NOT shelter under highway overpasses."
+      },
+      {
+        "title": "If in a vehicle",
+        "desc": "Do NOT try to outrun a tornado. Park, keep your seatbelt on, duck below windows, and cover your head."
+      },
+      {
+        "title": "After the tornado",
+        "desc": "Watch for debris, downed power lines, and gas leaks. Help injured neighbours if safe."
+      }
+    ]
+  },
+  {
+    "id": "power_outage",
+    "icon": "🔦",
+    "title": "Power Outage",
+    "color": "#ffd166",
+    "steps": [
+      {
+        "title": "Stay calm & assess",
+        "desc": "Check if the outage is just your home or the whole area. Look outside for other buildings without lights."
+      },
+      {
+        "title": "Use flashlights",
+        "desc": "Avoid candles due to fire risk. Use battery-powered or phone flashlights."
+      },
+      {
+        "title": "Preserve food",
+        "desc": "Keep fridge and freezer doors closed. A full freezer stays cold for ~48 hours; half for ~24 hours."
+      },
+      {
+        "title": "Unplug electronics",
+        "desc": "Turn off or disconnect appliances to prevent damage from power surges when electricity returns."
+      },
+      {
+        "title": "Stay warm / cool",
+        "desc": "In cold weather: layer clothing, gather in one room. In heat: stay hydrated, move to the lowest floor."
+      },
+      {
+        "title": "Check on neighbours",
+        "desc": "Especially elderly or disabled people who may need assistance."
+      }
+    ]
+  },
+  {
+    "id": "forest_fire",
+    "icon": "🔥",
+    "title": "Forest Fire",
+    "color": "#d62828",
+    "steps": [
+      {
+        "title": "Evacuate early",
+        "desc": "Do not wait until fire is visible. Leave as soon as an evacuation order or warning is issued — roads can quickly become gridlocked."
+      },
+      {
+        "title": "Close all windows & doors",
+        "desc": "Shut every opening to slow smoke and ember entry. Leave them unlocked for firefighters."
+      },
+      {
+        "title": "Seal gaps with wet towels",
+        "desc": "Block door gaps and vents with damp cloth to reduce smoke infiltration."
+      },
+      {
+        "title": "Remove flammable items",
+        "desc": "Move furniture, curtains and other flammables away from windows and exterior walls if time allows."
+      },
+      {
+        "title": "Follow evacuation routes",
+        "desc": "Use designated routes only. Avoid roads that go toward the fire. If smoke is thick, drive with headlights on."
+      },
+      {
+        "title": "If trapped outdoors",
+        "desc": "Move to a clearing away from vegetation. Lie face-down and cover exposed skin. Breathe through a wet cloth."
+      },
+      {
+        "title": "Report the fire",
+        "desc": "Call emergency services with your GPS location. Note wind direction — fire travels fast downwind."
+      }
+    ]
+  },
+  {
+    "id": "tsunami",
+    "icon": "🌊",
+    "title": "Tsunami",
+    "color": "#0077b6",
+    "steps": [
+      {
+        "title": "Recognize natural warnings",
+        "desc": "Strong ground shaking near the coast is a natural warning. You may also notice the sea pulling back dramatically."
+      },
+      {
+        "title": "Move inland immediately",
+        "desc": "Go to high ground — at least 30 m above sea level or 3 km inland — right away. Do NOT wait for an official warning."
+      },
+      {
+        "title": "Avoid the shore",
+        "desc": "Never go to the beach to watch a tsunami. The first wave may not be the largest."
+      },
+      {
+        "title": "Stay away from rivers",
+        "desc": "Tsunamis travel up rivers and streams. Avoid waterways near the coast."
+      },
+      {
+        "title": "Wait for the all-clear",
+        "desc": "Tsunamis can last hours with multiple waves. Do not return to low ground until authorities confirm it is safe."
+      },
+      {
+        "title": "After the waves",
+        "desc": "Avoid floodwater — it may contain debris. Check for injuries, gas leaks, and structural damage before entering buildings."
+      }
+    ]
+  },
+  {
+    "id": "blizzard",
+    "icon": "❄️",
+    "title": "Blizzard",
+    "color": "#90e0ef",
+    "steps": [
+      {
+        "title": "Stay indoors",
+        "desc": "Avoid travelling during a blizzard. If you must go out, tell someone your route and expected return time."
+      },
+      {
+        "title": "Layer up",
+        "desc": "Wear multiple thin layers, a windproof outer layer, insulated gloves, and a hat. Cover all exposed skin."
+      },
+      {
+        "title": "Prevent hypothermia & frostbite",
+        "desc": "Watch for shivering, confusion, or numb/white skin. Move indoors and warm gradually — do not rub frostbitten skin."
+      },
+      {
+        "title": "Conserve heating fuel",
+        "desc": "Lower the thermostat, close off unused rooms, and use blankets to retain heat."
+      },
+      {
+        "title": "If stranded in a vehicle",
+        "desc": "Stay in the car — it is your best shelter. Run the engine 10 min/hour for heat, clear the exhaust pipe, and keep a window cracked."
+      },
+      {
+        "title": "Avoid overexertion",
+        "desc": "Shovelling snow can cause heart attacks. Take breaks, drink warm fluids, and never shovel alone."
+      }
+    ]
+  },
+  {
+    "id": "heatwave",
+    "icon": "☀️",
+    "title": "Heatwave",
+    "color": "#f4a261",
+    "steps": [
+      {
+        "title": "Stay cool",
+        "desc": "Stay in air-conditioned spaces. If you have no AC, visit a library, shopping centre, or community cooling centre."
+      },
+      {
+        "title": "Hydrate constantly",
+        "desc": "Drink water every 15–20 minutes even if not thirsty. Avoid alcohol and caffeine — they dehydrate you."
+      },
+      {
+        "title": "Dress lightly",
+        "desc": "Wear loose, light-coloured, breathable clothing and a wide-brimmed hat when outdoors."
+      },
+      {
+        "title": "Never leave people / pets in cars",
+        "desc": "A car interior can reach 50 °C in minutes. Even with windows cracked, it is fatal."
+      },
+      {
+        "title": "Recognise heat stroke",
+        "desc": "Signs: body temp above 39 °C, hot dry skin, confusion. Call emergency services and cool the person immediately with wet cloths or ice packs."
+      },
+      {
+        "title": "Check on vulnerable people",
+        "desc": "Elderly, infants, and those with chronic illness are at highest risk. Visit or call them regularly."
+      }
+    ]
+  },
+  {
+    "id": "landslide",
+    "icon": "⛰️",
+    "title": "Landslide",
+    "color": "#6d4c41",
+    "steps": [
+      {
+        "title": "Know the warning signs",
+        "desc": "Watch for new cracks in ground or walls, tilting trees/poles, unusual sounds of cracking wood or rumbling."
+      },
+      {
+        "title": "Evacuate immediately",
+        "desc": "If you hear cracking, feel ground movement, or see debris flow — evacuate at right angles to the flow, not downhill."
+      },
+      {
+        "title": "Avoid river valleys",
+        "desc": "Landslides commonly follow watercourses. Move away from stream beds and drainage channels."
+      },
+      {
+        "title": "If you cannot escape",
+        "desc": "Curl into a tight ball and protect your head with your arms."
+      },
+      {
+        "title": "After a landslide",
+        "desc": "Stay away from the slide area — secondary slides are common. Check for injured people only from a safe distance and call emergency services."
+      },
+      {
+        "title": "Report damage",
+        "desc": "Notify authorities about blocked roads, damaged utilities, and any missing persons. Avoid entering buildings that may be structurally compromised."
+      }
+    ]
+  },
+  {
+    "id": "gas_leak",
+    "icon": "💨",
+    "title": "Gas Leak",
+    "color": "#52b788",
+    "steps": [
+      {
+        "title": "Do NOT use any ignition source",
+        "desc": "No light switches, matches, lighters, or electrical appliances. Even a phone call can spark an explosion — wait until you are outside."
+      },
+      {
+        "title": "Evacuate immediately",
+        "desc": "Leave the building at once. Do not stop to collect belongings. Leave doors open as you go to ventilate the space."
+      },
+      {
+        "title": "Do NOT use the lift",
+        "desc": "Take the stairs. A spark from the lift motor could ignite accumulated gas."
+      },
+      {
+        "title": "Move well away from the building",
+        "desc": "Go at least 100 m upwind. Keep bystanders back and prevent anyone from entering."
+      },
+      {
+        "title": "Call emergency services",
+        "desc": "From a safe distance, call the fire brigade and your gas utility. Give the address and describe what you smelled."
+      },
+      {
+        "title": "Do not re-enter",
+        "desc": "Only return when emergency services declare the building safe. Ventilate thoroughly before using any appliances."
+      }
+    ]
+  },
+  {
+    "id": "building_fire",
+    "icon": "🏠",
+    "title": "Building Fire",
+    "color": "#e63946",
+    "steps": [
+      {
+        "title": "Alert everyone",
+        "desc": "Activate the nearest fire alarm pull station. Shout 'FIRE!' to alert others on your floor."
+      },
+      {
+        "title": "Call 112 (emergency services)",
+        "desc": "Report the exact address, floor, and what is burning. Stay on the line if safe to do so."
+      },
+      {
+        "title": "Evacuate — stay low",
+        "desc": "Crawl below the smoke. Touch doors before opening — if hot, do NOT open; find another exit."
+      },
+      {
+        "title": "Use stairs only",
+        "desc": "Never use the lift during a fire. Feel each door before opening it; close doors behind you to slow fire spread."
+      },
+      {
+        "title": "If you cannot escape",
+        "desc": "Seal door gaps with cloth, open a window and signal for help. Stay near the floor where air is cleaner."
+      },
+      {
+        "title": "Once outside, stay out",
+        "desc": "Assemble at the designated muster point. Account for everyone and report missing persons to firefighters."
+      }
+    ]
+  },
+  {
+    "id": "medical_emergency",
+    "icon": "🩺",
+    "title": "Medical Emergency",
+    "color": "#e63946",
+    "steps": [
+      {
+        "title": "Assess the scene",
+        "desc": "Ensure the scene is safe before approaching. Look for hazards such as traffic, fire, or unstable structures."
+      },
+      {
+        "title": "Call 112 (emergency services)",
+        "desc": "Provide location, nature of emergency, number of casualties, and your phone number. Stay on the line."
+      },
+      {
+        "title": "Check responsiveness",
+        "desc": "Tap the person's shoulder and shout 'Are you OK?'. If no response, check for normal breathing."
+      },
+      {
+        "title": "Start CPR if needed",
+        "desc": "If not breathing normally: 30 chest compressions (5–6 cm deep, 100–120/min) then 2 rescue breaths. Repeat until help arrives."
+      },
+      {
+        "title": "Use an AED if available",
+        "desc": "Automated Defibrillators (AEDs) are in many public buildings. Switch it on and follow the voice instructions exactly."
+      },
+      {
+        "title": "Control severe bleeding",
+        "desc": "Apply firm, continuous pressure with a cloth. Do not remove a dressing — add more on top. Elevate the limb if possible."
+      },
+      {
+        "title": "Keep the person warm and calm",
+        "desc": "Cover with a blanket to prevent shock. Do not give food or water. Reassure them until paramedics arrive."
+      }
+    ]
+  },
+  {
+    "id": "hazmat",
+    "icon": "☣️",
+    "title": "Hazmat / Chemical Spill",
+    "color": "#606c38",
+    "steps": [
+      {
+        "title": "Move away immediately",
+        "desc": "Move upwind, uphill, and upstream from the spill. Do not walk through visible vapours, fumes, or liquids."
+      },
+      {
+        "title": "Call 112",
+        "desc": "Report the location, name of the substance if known, and number of people affected. Do not re-enter the area."
+      },
+      {
+        "title": "If exposure occurs — flush skin/eyes",
+        "desc": "Remove contaminated clothing. Flush affected skin or eyes with large amounts of clean water for at least 15 minutes."
+      },
+      {
+        "title": "Shelter in place if directed",
+        "desc": "If authorities say shelter in place: go inside, close all windows and doors, turn off HVAC, and seal gaps with tape and damp towels."
+      },
+      {
+        "title": "Do not eat, drink, or smoke",
+        "desc": "Avoid touching your face until fully decontaminated. Hazardous materials can be absorbed through skin and mucous membranes."
+      },
+      {
+        "title": "Follow official guidance",
+        "desc": "Wait for emergency services to give the all-clear before returning to the area or removing shelter-in-place measures."
+      }
+    ]
+  },
+  {
+    "id": "nuclear_radiation",
+    "icon": "☢️",
+    "title": "Nuclear / Radiation Alert",
+    "color": "#7b2d8b",
+    "steps": [
+      {
+        "title": "Get inside",
+        "desc": "Enter the nearest substantial building. Brick, concrete, and underground spaces provide the best shielding. Avoid wooden structures."
+      },
+      {
+        "title": "Stay inside",
+        "desc": "Close all windows, doors, and fireplace dampers. Turn off fans, air conditioning, and heating that draws outside air."
+      },
+      {
+        "title": "Go to the inner core of the building",
+        "desc": "Move to the basement or the centre of the building, away from windows and exterior walls, to maximise shielding."
+      },
+      {
+        "title": "Tune to emergency broadcasts",
+        "desc": "Follow official instructions from national emergency management (Finland: Yle Radio 1 / YLE website). Do not rely on rumours."
+      },
+      {
+        "title": "Take potassium iodide (KI) only if instructed",
+        "desc": "KI protects only the thyroid from radioactive iodine. Take it ONLY if authorities advise — timing matters critically."
+      },
+      {
+        "title": "Decontaminate if you were outside",
+        "desc": "Remove outer clothing (removes ~80% of contamination), shower with soap and water, blow nose gently, and change into clean clothes."
+      }
+    ]
+  },
+  {
+    "id": "missing_person",
+    "icon": "🔍",
+    "title": "Missing Person",
+    "color": "#023e8a",
+    "steps": [
+      {
+        "title": "Check common locations first",
+        "desc": "Search the home thoroughly, then contact friends, school, and workplace. Check recent messages and social media for clues."
+      },
+      {
+        "title": "Call 112 (or local police non-emergency)",
+        "desc": "Report a missing person immediately — there is no mandatory waiting period. Give name, age, description, last known location, and time last seen."
+      },
+      {
+        "title": "Gather key information",
+        "desc": "Collect a recent photo, description of clothing, medical conditions, medications needed, and a list of known contacts and frequent locations."
+      },
+      {
+        "title": "Preserve evidence",
+        "desc": "Do not clean the person's room. Their phone, computer, and belongings may be important for investigators."
+      },
+      {
+        "title": "Coordinate search efforts",
+        "desc": "Work with police to organize volunteer searches. Use the Map feature to mark searched areas and locations of interest."
+      },
+      {
+        "title": "Use Timers to track search shifts",
+        "desc": "Set countdown timers for search shifts to ensure searchers rest and rotate safely."
+      },
+      {
+        "title": "Keep communication channels open",
+        "desc": "Designate one person as communication coordinator. Post updates carefully — avoid sharing information that could compromise the search."
+      }
+    ]
+  },
+  {
+    "id": "cyber_blackout",
+    "icon": "🖥️",
+    "title": "Cyber Attack / Grid Failure",
+    "color": "#495057",
+    "steps": [
+      {
+        "title": "Assume extended outage",
+        "desc": "A coordinated infrastructure attack may last days to weeks. Begin rationing supplies and switching to manual backups immediately."
+      },
+      {
+        "title": "Secure cash and physical documents",
+        "desc": "ATMs and card payments may be unavailable. Keep emergency cash, ID documents, and medical records accessible."
+      },
+      {
+        "title": "Protect drinking water",
+        "desc": "Water pumping stations may fail. Fill bathtubs, large containers, and any available vessels immediately."
+      },
+      {
+        "title": "Fuel vehicles and generators early",
+        "desc": "Fuel pumps require power. Refuel as soon as possible; avoid long queues later."
+      },
+      {
+        "title": "Limit device use",
+        "desc": "Conserve phone battery for emergencies. Turn off Wi-Fi and Bluetooth when not in use; enable low-power mode."
+      },
+      {
+        "title": "Monitor official broadcasts",
+        "desc": "Use a battery or hand-crank radio to receive emergency instructions. Avoid spreading unverified information."
+      },
+      {
+        "title": "Cooperate with neighbours",
+        "desc": "Share resources, check on vulnerable people, and establish a local communication system (e.g., notice board or in-person check-ins)."
+      }
+    ]
+  }
+]
