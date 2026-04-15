@@ -12,15 +12,43 @@
 
   <!-- HOME PAGE -->
   <section id="page-home" class="page active">
-    <header class="page-header">
+    <header class="page-header home-header">
       <h1>&#9888; Emergency Archive</h1>
       <span class="subtitle">Dashboard</span>
     </header>
 
+    <section class="home-hero">
+      <div class="home-hero-copy">
+        <span class="home-kicker">Preparedness Dashboard</span>
+        <h2>Keep your critical tools, saved locations, and reference material close at hand.</h2>
+        <p>Use this page as your quick situation overview before jumping into maps, timers, or the offline library.</p>
+      </div>
+      <div class="home-stats" aria-label="Dashboard summary">
+        <div class="home-stat-card home-stat-card--timers">
+          <span class="home-stat-label">Active Timers</span>
+          <strong id="home-stat-timers" class="home-stat-value">0</strong>
+        </div>
+        <div class="home-stat-card home-stat-card--poi">
+          <span class="home-stat-label">Saved POIs</span>
+          <strong id="home-stat-poi" class="home-stat-value">0</strong>
+        </div>
+        <div class="home-stat-card home-stat-card--library">
+          <span class="home-stat-label">Saved Articles</span>
+          <strong id="home-stat-library" class="home-stat-value">0</strong>
+        </div>
+      </div>
+    </section>
+
     <div class="home-grid">
       <!-- Active Timers Card -->
-      <div class="card" id="home-timers-card">
-        <h2>&#9201; Active Timers</h2>
+      <div class="card home-card home-card--timers" id="home-timers-card">
+        <div class="home-card-header">
+          <div>
+            <span class="home-card-kicker">Timekeeping</span>
+            <h2>&#9201; Active Timers</h2>
+          </div>
+          <span class="home-card-badge">Live</span>
+        </div>
         <div id="home-timers-list" class="home-list">
           <p class="empty-msg">No active timers</p>
         </div>
@@ -28,8 +56,14 @@
       </div>
 
       <!-- Points of Interest Card -->
-      <div class="card" id="home-poi-card">
-        <h2>&#128204; Points of Interest</h2>
+      <div class="card home-card home-card--poi" id="home-poi-card">
+        <div class="home-card-header">
+          <div>
+            <span class="home-card-kicker">Navigation</span>
+            <h2>&#128204; Points of Interest</h2>
+          </div>
+          <span class="home-card-badge">Map</span>
+        </div>
         <div id="home-poi-list" class="home-list">
           <p class="empty-msg">No points of interest</p>
         </div>
@@ -37,8 +71,14 @@
       </div>
 
       <!-- Library Bookmarks Card -->
-      <div class="card" id="home-library-card">
-        <h2>&#128278; Saved Articles</h2>
+      <div class="card home-card home-card--library" id="home-library-card">
+        <div class="home-card-header">
+          <div>
+            <span class="home-card-kicker">Reference</span>
+            <h2>&#128278; Saved Articles</h2>
+          </div>
+          <span class="home-card-badge">Offline</span>
+        </div>
         <div id="home-library-list" class="home-list">
           <p class="empty-msg">No bookmarked articles</p>
         </div>

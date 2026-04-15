@@ -24,6 +24,9 @@
   const homeTimersList = $("#home-timers-list");
   const homePoiList    = $("#home-poi-list");
   const homeLibraryList = $("#home-library-list");
+  const homeStatTimers = $("#home-stat-timers");
+  const homeStatPoi = $("#home-stat-poi");
+  const homeStatLibrary = $("#home-stat-library");
 
   // Map
   const poiModal     = $("#poi-modal");
@@ -441,6 +444,11 @@
   function refreshHome() {
     // Timers
     const activeTimers = state.timers.filter(t => t.running);
+    const bookmarks = getStoredZimBookmarks();
+    homeStatTimers.textContent = String(activeTimers.length);
+    homeStatPoi.textContent = String(state.pois.length);
+    homeStatLibrary.textContent = String(bookmarks.length);
+
     if (activeTimers.length === 0) {
       homeTimersList.innerHTML = `<p class="empty-msg">No active timers</p>`;
     } else {
@@ -467,7 +475,6 @@
     }
 
     // Library bookmarks
-    const bookmarks = getStoredZimBookmarks();
     if (bookmarks.length === 0) {
       homeLibraryList.innerHTML = `<p class="empty-msg">No bookmarked articles</p>`;
     } else {
