@@ -88,8 +88,11 @@
     lang: "en",
   }).addTo(map);
 
-  // Force canvas repaint after zoom so tiles never stay blank
-  map.on("zoomend", () => { map.invalidateSize(); pmLayer.redraw(); });
+  window.addEventListener("resize", () => {
+    if (document.querySelector("#page-map.active")) {
+      requestAnimationFrame(() => map.invalidateSize());
+    }
+  });
 
   // ──────────── User Location ────────────
   let locationMarker = null;
