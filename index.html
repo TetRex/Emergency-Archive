@@ -40,12 +40,21 @@
 
   <!-- MAP PAGE -->
   <section id="page-map" class="page">
-    <header class="page-header">
+    <header class="page-header page-header--map">
       <h1>&#128204; Map</h1>
       <span class="map-hint-chip">&#43; Tap map to pin</span>
     </header>
     <div id="map-row">
       <div id="map-container">
+        <div class="map-hud">
+          <span class="map-kicker">Field View</span>
+          <h2>Offline Finland Map</h2>
+          <p>Track your location and mark shelters, water, medical points, and hazards directly on the map.</p>
+          <div class="map-hud-pills">
+            <span class="map-hud-pill">Offline tiles</span>
+            <span class="map-hud-pill">Local POIs</span>
+          </div>
+        </div>
         <div id="map"></div>
         <div class="map-offline-tag">&#9632; Finland &mdash; Offline</div>
         <button id="locate-btn" class="locate-fab" title="Show my location">&#127919;</button>
@@ -53,13 +62,17 @@
       <!-- POI sidebar -->
       <aside id="poi-sidebar">
         <div class="poi-sidebar-header">
-          <span class="poi-sidebar-title">Points of Interest</span>
+          <div class="poi-sidebar-heading">
+            <span class="poi-sidebar-title">Points of Interest</span>
+            <span class="poi-sidebar-subtitle">Pinned locations saved on this device</span>
+          </div>
           <span id="poi-count-badge" class="poi-count-badge">0</span>
         </div>
         <ul id="poi-list">
           <li class="poi-empty-state" id="poi-empty-state">
             <span class="poi-empty-icon">&#128204;</span>
-            <span>Tap the map to add a point</span>
+            <span class="poi-empty-title">No saved points yet</span>
+            <span class="poi-empty-copy">Tap anywhere on the map to add your first location marker.</span>
           </li>
         </ul>
       </aside>
