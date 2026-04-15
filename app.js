@@ -622,6 +622,7 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   let voiceMuteNode = null;
   let voiceRecording = false;
   let voiceFinalizing = false;
+  let voicePreparing = false;
   let voiceDraftPrefix = "";
   let voiceTranscriptSegments = [];
   let voicePartialTranscript = "";
@@ -662,17 +663,21 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
   function syncChatControls() {
     chatSendBtn.disabled = chatSending || voiceRecording || voiceFinalizing;
-    chatVoiceBtn.disabled = !voiceSupported || chatSending || voiceFinalizing;
+    chatVoiceBtn.disabled = !voiceSupported || chatSending || voiceFinalizing || voicePreparing;
     chatVoiceBtn.classList.toggle("is-recording", voiceRecording);
     chatVoiceBtn.title = voiceRecording ? "Stop voice input" : "Start voice input";
     chatVoiceBtn.setAttribute("aria-pressed", voiceRecording ? "true" : "false");
   }
 
-  function buildVoiceDraft() {
-    const spoken = [...voiceTranscriptSegments, voicePartialTranscript]
+  function getVoiceTranscriptText() {
+    return [...voiceTranscriptSegments, voicePartialTranscript]
       .filter(Boolean)
       .join(" ")
       .trim();
+  }
+
+  function buildVoiceDraft() {
+    const spoken = getVoiceTranscriptText();
 
     if (!voiceDraftPrefix) return spoken;
     if (!spoken) return voiceDraftPrefix;
@@ -713,6 +718,7 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
     }
     voiceRecording = false;
     voiceFinalizing = false;
+    voicePreparing = false;
     syncChatControls();
   }
 
@@ -743,9 +749,11 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
   }
 
   async function startVoiceInput() {
-    if (!voiceSupported || voiceRecording || voiceFinalizing) return;
+    if (!voiceSupported || voiceRecording || voiceFinalizing || voicePreparing) return;
 
     try {
+      voicePreparing = true;
+      syncChatControls();
       const model = await loadVoiceModel();
 
       setChatVoiceStatus("Requesting microphone access...", "info");
@@ -806,6 +814,7 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
       voiceMuteNode.connect(voiceAudioContext.destination);
 
       voiceRecording = true;
+      voicePreparing = false;
       syncChatControls();
       setChatVoiceStatus("Listening... tap the mic again to stop.", "recording");
     } catch (err) {
@@ -842,11 +851,11 @@ Keep answers brief (2-5 sentences unless a step-by-step list is needed). Never r
 
     await new Promise(resolve => setTimeout(resolve, 250));
 
-    const transcript = buildVoiceDraft().trim();
+    const spokenTranscript = getVoiceTranscriptText();
     cleanupVoiceResources();
     setChatVoiceStatus(
-      transcript ? "Transcript added to the message." : "No speech was detected.",
-      transcript ? "success" : "info"
+      spokenTranscript ? "Transcript added to the message." : "No speech was detected.",
+      spokenTranscript ? "success" : "info"
     );
     chatInput.focus();
   }

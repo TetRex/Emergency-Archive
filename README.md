@@ -61,6 +61,7 @@ Each guide is shown as an interactive checklist. Tapping a step marks it complet
 - Auto-detects available models.
 - Streams responses in real time with lightweight Markdown rendering.
 - Keeps the assistant focused on emergency preparedness, first aid, and survival topics.
+- Supports fully offline **English voice input** using a bundled Vosk browser runtime and local speech model.
 
 ### 📚 Offline Library
 - Opens the bundled `data/zim/wikipedia_en_100_mini_2026-01.zim` archive directly in the browser.
@@ -70,6 +71,11 @@ Each guide is shown as an interactive checklist. Tapping a step marks it complet
 ### 💾 Local Persistence
 - POIs and timers are stored in `localStorage`.
 - Scenario content is kept in JSON so guides can be expanded without editing the main application logic.
+
+### 🎙️ Offline Voice Input
+- Runs speech-to-text locally in the browser using Vosk.
+- Uses the bundled `data/models/vosk-model-small-en-us-0.15.tar.gz` model for English transcription.
+- Inserts transcripts into the existing AI chat input so users can review or edit before sending to Ollama.
 
 ---
 
@@ -83,7 +89,7 @@ python3 -m http.server 8000
 
 Then open [http://localhost:8000](http://localhost:8000).
 
-Serving over HTTP is important during development because the app loads bundled JSON and ZIM assets with `fetch()`.
+Serving over HTTP is important during development because the app loads bundled JSON, model, and ZIM assets with `fetch()`.
 
 ---
 
@@ -94,13 +100,18 @@ Serving over HTTP is important during development because the app loads bundled 
 ├── app.js                       # App logic for navigation, map, scenarios, timers, chat, and library
 ├── styles.css                   # Global styles and design tokens
 ├── README.md                    # Project documentation
-└── data/
+├── data/
     ├── json/
     │   └── scenarios.json       # Scenario guide data
+    ├── models/
+    │   └── vosk-model-small-en-us-0.15.tar.gz  # Offline English speech-to-text model
     ├── pmtiles/
     │   └── finland.pmtiles      # Offline vector map archive
     └── zim/
         └── wikipedia_en_100_mini_2026-01.zim  # Offline Wikipedia archive
+└── vendor/
+    └── vosk/
+        └── vosk.js              # Bundled Vosk browser runtime
 ```
 
 ---
@@ -109,4 +120,8 @@ Serving over HTTP is important during development because the app loads bundled 
 
 Bundled map tiles, scenario data, and the offline Wikipedia archive are read locally from the repository.
 
-User-created POIs and timers are stored in the browser's `localStorage`. The app does not require a backend service. The only optional integration in the current version is the chat connection to a locally running Ollama server on your own machine.
+User-created POIs and timers are stored in the browser's `localStorage`. The app does not require a backend service.
+
+The optional AI features stay local as well:
+- Voice transcription runs in-browser using the bundled Vosk model.
+- Chat responses come from a locally running Ollama server on your own machine.
