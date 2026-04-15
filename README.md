@@ -1,6 +1,8 @@
 # ⚠️ Emergency Archive
+
 This project was completed as part of the course "Browser Programming" at the Savonia University of Applied Sciences.
-A fully offline-capable emergency preparedness web app. It works without any internet connection — maps, AI chat, voice input, and all scenario guides run entirely on-device.
+
+Emergency Archive is a static, client-side emergency preparedness web app built to work offline first. It bundles map data, scenario guides, and a local Wikipedia archive directly in the repository so the app remains useful without a backend or external content service. The AI chat feature is optional and works when a local [Ollama](https://ollama.com/) instance is running.
 
 ---
 
@@ -16,21 +18,24 @@ A fully offline-capable emergency preparedness web app. It works without any int
 
 | Home Dashboard |
 |:---:|
-| ![Home dashboard](.github/assets//Screenshot%202026-02-26%20at%2015.40.09.png) |
+| ![Home dashboard](.github/assets/Screenshot%202026-02-26%20at%2015.40.09.png) |
+
+---
 
 ## Features
 
 ### 🏠 Dashboard
-A home screen summarising active timers and saved points of interest for a quick situation overview.
+A home screen that surfaces active timers and saved points of interest for a quick situation overview.
 
 ### 🗺️ Offline Map
-- Renders a vector map of **Finland** using a locally bundled `data/pmtiles/finland.pmtiles` file — zero network tile requests.
+- Renders a vector map of **Finland** using the bundled `data/pmtiles/finland.pmtiles` archive.
 - Powered by [Leaflet](https://leafletjs.com/) and [Protomaps Leaflet](https://github.com/protomaps/protomaps-leaflet).
-- **GPS location tracking** — shows your position with a pulsing dot and accuracy circle.
-- **Points of Interest (POI)** — tap anywhere on the map to pin a location. Categories: Shelter, Water, Medical, Danger Zone, Food, Other. POIs persist across sessions.
+- Supports **GPS location tracking** with a pulsing marker and accuracy circle.
+- Lets you add **Points of Interest (POIs)** directly from the map with categories for shelter, water, medical, danger, food, and other.
+- Saves POIs locally in the browser.
 
 ### 📋 Emergency Scenarios
-Step-by-step interactive guides for nine emergency types:
+Step-by-step emergency guides are loaded from `data/json/scenarios.json`. The current bundle includes 16 scenarios:
 
 | Scenario | Scenario |
 |---|---|
@@ -38,40 +43,70 @@ Step-by-step interactive guides for nine emergency types:
 | 🌪️ Tornado | 🔦 Power Outage |
 | 🔥 Forest Fire | 🌊 Tsunami |
 | ❄️ Blizzard | ☀️ Heatwave |
-| ⛰️ Landslide | |
+| ⛰️ Landslide | 💨 Gas Leak |
+| 🏠 Building Fire | 🩺 Medical Emergency |
+| ☣️ Hazmat / Chemical Spill | ☢️ Nuclear / Radiation Alert |
+| 🔍 Missing Person | 🖥️ Cyber Attack / Grid Failure |
 
-Each guide is presented as a numbered checklist — tap a step to mark it complete.
+Each guide is shown as an interactive checklist. Tapping a step marks it complete in the current view.
 
 ### ⏱️ Timers
-- **Countdown timers** — set hours, minutes, seconds with a custom label.
-- **Stopwatches** — start, pause, reset, and delete at any time.
-- Active timer counts are surfaced on the Home dashboard.
+- Create **countdown timers** with custom labels.
+- Create **stopwatches** that can be started, paused, reset, and deleted.
+- Surface active timers on the dashboard.
+- Save timer state locally in the browser.
 
 ### 🤖 AI Chat
-- Connects to a locally running [Ollama](https://ollama.com/) instance (`http://localhost:11434`).
-- Auto-detects all available models via the Ollama API.
+- Connects to a locally running [Ollama](https://ollama.com/) instance at `http://localhost:11434`.
+- Auto-detects available models.
 - Streams responses in real time with lightweight Markdown rendering.
-- Responses are scoped to emergency preparedness, first aid, and survival topics.
+- Keeps the assistant focused on emergency preparedness, first aid, and survival topics.
+
+### 📚 Offline Library
+- Opens the bundled `data/zim/wikipedia_en_100_mini_2026-01.zim` archive directly in the browser.
+- Supports article browsing, searching, pagination, and reading in an embedded viewer.
+- Keeps reference material available locally even without an internet connection.
+
+### 💾 Local Persistence
+- POIs and timers are stored in `localStorage`.
+- Scenario content is kept in JSON so guides can be expanded without editing the main application logic.
+
+---
+
+## Development
+
+This repository has no build step, package scripts, or backend service. Run it with a local static server:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open [http://localhost:8000](http://localhost:8000).
+
+Serving over HTTP is important during development because the app loads bundled JSON and ZIM assets with `fetch()`.
 
 ---
 
 ## File Structure
 
-```
-├── index.html                   # App shell & all page markup
-├── app.js                       # All application logic (map, POIs, timers, chat, voice)
-├── styles.css                   # Styles
+```text
+├── index.html                   # App shell and page markup
+├── app.js                       # App logic for navigation, map, scenarios, timers, chat, and library
+├── styles.css                   # Global styles and design tokens
+├── README.md                    # Project documentation
 └── data/
     ├── json/
     │   └── scenarios.json       # Scenario guide data
     ├── pmtiles/
-    │   └── finland.pmtiles      # Bundled offline vector map for Finland
+    │   └── finland.pmtiles      # Offline vector map archive
     └── zim/
-        └── wikipedia_en_100_mini_2026-01.zim
+        └── wikipedia_en_100_mini_2026-01.zim  # Offline Wikipedia archive
 ```
 
 ---
 
 ## Data & Privacy
 
-All data — map tiles, POIs, timers, AI conversations, and voice recordings — stays on your device. Nothing is transmitted to external servers (the Whisper model is downloaded from Hugging Face on first use; Ollama runs locally).
+Bundled map tiles, scenario data, and the offline Wikipedia archive are read locally from the repository.
+
+User-created POIs and timers are stored in the browser's `localStorage`. The app does not require a backend service. The only optional integration in the current version is the chat connection to a locally running Ollama server on your own machine.
