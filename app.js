@@ -41,6 +41,11 @@
   const addStopwatchBtn  = $("#add-stopwatch-btn");
   const timersGrid       = $("#timers-grid");
   const timersEmpty      = $("#timers-empty");
+  const timersStatTotal  = $("#timers-stat-total");
+  const timersStatRunning = $("#timers-stat-running");
+  const timersStatNext   = $("#timers-stat-next");
+  const timersStatNextLabel = $("#timers-stat-next-label");
+  const timersToolbarNote = $("#timers-toolbar-note");
   const countdownModal   = $("#countdown-modal");
   const cdLabel          = $("#cd-label");
   const cdHours          = $("#cd-hours");
@@ -323,22 +328,145 @@
     return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
   }
 
+  function formatDurationShort(ms) {
+    const totalSec = Math.max(0, Math.ceil(ms / 1000));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;",
+    }[ch]));
+  }
+
+  function getTimerProgress(timer) {
+    if (timer.type === "countdown") {
+      if (timer.totalMs <= 0) return 0;
+      return Math.max(0, Math.min(100, ((timer.totalMs - timer.remainingMs) / timer.totalMs) * 100));
+    }
+    if (timer.running) return 100;
+    if (timer.remainingMs > 0) return 42;
+    return 12;
+  }
+
+  function getTimerStatus(timer) {
+    if (timer.type === "countdown" && timer.remainingMs <= 0) {
+      return { label: "Expired", className: "tc-state--expired" };
+    }
+    if (timer.running) {
+      return { label: "Running", className: "tc-state--running" };
+    }
+    if (
+      (timer.type === "countdown" && timer.remainingMs < timer.totalMs) ||
+      (timer.type === "stopwatch" && timer.remainingMs > 0)
+    ) {
+      return { label: "Paused", className: "tc-state--paused" };
+    }
+    return { label: "Ready", className: "tc-state--ready" };
+  }
+
+  function getTimerDisplayLabel(timer) {
+    if (timer.type === "countdown") {
+      return timer.remainingMs <= 0 ? "Completed" : "Time Remaining";
+    }
+    return "Elapsed Time";
+  }
+
+  function refreshTimerSummary() {
+    const total = state.timers.length;
+    const running = state.timers.filter(t => t.running).length;
+    const paused = state.timers.filter(t =>
+      !t.running && (
+        (t.type === "countdown" && t.remainingMs > 0 && t.remainingMs < t.totalMs) ||
+        (t.type === "stopwatch" && t.remainingMs > 0)
+      )
+    ).length;
+    const expired = state.timers.filter(t => t.type === "countdown" && t.remainingMs <= 0).length;
+    const nextCountdown = state.timers
+      .filter(t => t.type === "countdown" && t.remainingMs > 0)
+      .sort((a, b) => a.remainingMs - b.remainingMs)[0];
+
+    timersStatTotal.textContent = String(total);
+    timersStatRunning.textContent = String(running);
+
+    if (nextCountdown) {
+      timersStatNext.textContent = formatMs(nextCountdown.remainingMs);
+      timersStatNextLabel.textContent = nextCountdown.label;
+    } else if (expired) {
+      timersStatNext.textContent = "00:00:00";
+      timersStatNextLabel.textContent = "Expired countdown waiting reset";
+    } else {
+      timersStatNext.textContent = "--:--:--";
+      timersStatNextLabel.textContent = "No countdown currently armed";
+    }
+
+    if (!total) {
+      timersToolbarNote.textContent = "No timers armed. Start a countdown or stopwatch to build your board.";
+      return;
+    }
+
+    const parts = [];
+    if (running) parts.push(`${running} running`);
+    if (paused) parts.push(`${paused} paused`);
+    if (expired) parts.push(`${expired} expired`);
+    if (!parts.length) parts.push("All timers ready");
+    if (nextCountdown) {
+      parts.push(`Next due: ${nextCountdown.label} in ${formatDurationShort(nextCountdown.remainingMs)}`);
+    }
+    timersToolbarNote.textContent = parts.join(" • ");
+  }
+
   function renderTimers() {
-    // Remove old cards
-    timersGrid.querySelectorAll(".timer-card").forEach(c => c.remove());
-    timersEmpty.style.display = state.timers.length ? "none" : "block";
+    timersGrid.innerHTML = "";
+    timersEmpty.style.display = state.timers.length ? "none" : "grid";
+    refreshTimerSummary();
 
     state.timers.forEach(t => {
+      const status = getTimerStatus(t);
+      const progress = getTimerProgress(t);
       const card = document.createElement("div");
-      card.className = "timer-card" + (t.type === "countdown" && t.remainingMs <= 0 ? " expired" : "");
+      card.className = `timer-card timer-card--${t.type}${t.running ? " timer-card--running" : ""}${t.type === "countdown" && t.remainingMs <= 0 ? " expired" : ""}`;
       card.id = `timer-${t.id}`;
-      const display = t.type === "countdown" ? formatMs(t.remainingMs) : formatMs(t.remainingMs);
+      card.style.setProperty("--timer-progress", `${progress}%`);
+      const display = formatMs(t.remainingMs);
+      const metaPrimaryLabel = t.type === "countdown" ? "Preset" : "Captured";
+      const metaPrimaryValue = t.type === "countdown" ? formatMs(t.totalMs) : display;
+      const metaSecondaryLabel = t.type === "countdown" ? "Progress" : "Status";
+      const metaSecondaryValue = t.type === "countdown" ? `${Math.round(progress)}% elapsed` : status.label;
       card.innerHTML = `
-        <div class="tc-label">
-          <span>${t.label}</span>
-          <span class="tc-type">${t.type === "countdown" ? "⏳ Countdown" : "⏱ Stopwatch"}</span>
+        <div class="tc-head">
+          <span class="tc-type tc-type--${t.type}">${t.type === "countdown" ? "Countdown" : "Stopwatch"}</span>
+          <span class="tc-state ${status.className}" data-field="state">${status.label}</span>
         </div>
-        <div class="tc-display">${display}</div>
+        <div class="tc-main">
+          <h3 class="tc-title">${escapeHtml(t.label)}</h3>
+          <div class="tc-display-wrap">
+            <span class="tc-display-note" data-field="display-label">${getTimerDisplayLabel(t)}</span>
+            <div class="tc-display" data-field="display">${display}</div>
+            <div class="tc-track">
+              <span class="tc-track-fill${t.type === "stopwatch" && t.running ? " tc-track-fill--animated" : ""}" data-field="track-fill"></span>
+            </div>
+          </div>
+        </div>
+        <div class="tc-meta">
+          <div class="tc-meta-item">
+            <span class="tc-meta-label">${metaPrimaryLabel}</span>
+            <strong data-field="meta-primary">${metaPrimaryValue}</strong>
+          </div>
+          <div class="tc-meta-item">
+            <span class="tc-meta-label">${metaSecondaryLabel}</span>
+            <strong data-field="meta-secondary">${metaSecondaryValue}</strong>
+          </div>
+        </div>
         <div class="tc-actions">
           ${t.running
             ? `<button class="tc-pause" data-id="${t.id}">Pause</button>`
@@ -373,21 +501,44 @@
       if (timer.remainingMs <= 0) {
         timer.remainingMs = 0;
         pauseTimer(timer.id);
-        // Visual flash
-        const card = $(`#timer-${timer.id}`);
-        if (card) card.classList.add("expired");
+        return;
       }
     } else {
       timer.remainingMs += 100;
     }
-    updateTimerDisplay(timer);
+    updateTimerCard(timer);
   }
 
-  function updateTimerDisplay(timer) {
+  function updateTimerCard(timer) {
     const card = $(`#timer-${timer.id}`);
     if (!card) return;
-    const display = card.querySelector(".tc-display");
+    const status = getTimerStatus(timer);
+    const progress = getTimerProgress(timer);
+    const display = card.querySelector("[data-field=\"display\"]");
+    const displayLabel = card.querySelector("[data-field=\"display-label\"]");
+    const stateEl = card.querySelector("[data-field=\"state\"]");
+    const metaPrimary = card.querySelector("[data-field=\"meta-primary\"]");
+    const metaSecondary = card.querySelector("[data-field=\"meta-secondary\"]");
+    const trackFill = card.querySelector("[data-field=\"track-fill\"]");
+    card.classList.toggle("timer-card--running", timer.running);
+    card.classList.toggle("expired", timer.type === "countdown" && timer.remainingMs <= 0);
+    card.style.setProperty("--timer-progress", `${progress}%`);
     if (display) display.textContent = formatMs(timer.remainingMs);
+    if (displayLabel) displayLabel.textContent = getTimerDisplayLabel(timer);
+    if (stateEl) {
+      stateEl.textContent = status.label;
+      stateEl.className = `tc-state ${status.className}`;
+    }
+    if (metaPrimary) {
+      metaPrimary.textContent = timer.type === "countdown" ? formatMs(timer.totalMs) : formatMs(timer.remainingMs);
+    }
+    if (metaSecondary) {
+      metaSecondary.textContent = timer.type === "countdown" ? `${Math.round(progress)}% elapsed` : status.label;
+    }
+    if (trackFill) {
+      trackFill.classList.toggle("tc-track-fill--animated", timer.type === "stopwatch" && timer.running);
+    }
+    refreshTimerSummary();
   }
 
   function startTimer(id) {

@@ -172,18 +172,73 @@
 
   <!-- TIMERS PAGE -->
   <section id="page-timers" class="page">
-    <header class="page-header">
+    <header class="page-header page-header--timers">
       <h1>&#9201; Timers</h1>
-      <span class="subtitle">Manage countdown &amp; stopwatch timers</span>
+      <span class="subtitle">Countdowns and stopwatches</span>
     </header>
 
-    <div class="timers-toolbar">
-      <button id="add-countdown-btn" class="btn-primary">+ Countdown</button>
-      <button id="add-stopwatch-btn" class="btn-primary">+ Stopwatch</button>
-    </div>
+    <div class="timers-shell">
+      <section class="timers-hero">
+        <div class="timers-hero-copy">
+          <span class="timers-kicker">Timekeeping Deck</span>
+          <h2>Keep critical countdowns and running tasks visible at a glance.</h2>
+          <p>Use this board for rescue ETAs, radio checks, drill intervals, medication spacing, or any task where timing clarity matters.</p>
+          <div class="timers-hero-pills" aria-label="Timer features">
+            <span>Offline</span>
+            <span>Saved locally</span>
+            <span>Fast restart</span>
+          </div>
+        </div>
 
-    <div id="timers-grid" class="timers-grid">
-      <p class="empty-msg" id="timers-empty">Tap a button above to create a timer</p>
+        <div class="timers-summary" aria-label="Timer summary">
+          <div class="timers-stat-card">
+            <span class="timers-stat-label">Total Timers</span>
+            <strong id="timers-stat-total" class="timers-stat-value">0</strong>
+            <span class="timers-stat-detail">Available on this device</span>
+          </div>
+          <div class="timers-stat-card">
+            <span class="timers-stat-label">Running Now</span>
+            <strong id="timers-stat-running" class="timers-stat-value">0</strong>
+            <span class="timers-stat-detail">Live timers in motion</span>
+          </div>
+          <div class="timers-stat-card timers-stat-card--next">
+            <span class="timers-stat-label">Next Countdown Due</span>
+            <strong id="timers-stat-next" class="timers-stat-value">--:--:--</strong>
+            <span id="timers-stat-next-label" class="timers-stat-detail">No countdown currently armed</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="timers-controls">
+        <div class="timers-toolbar">
+          <button id="add-countdown-btn" class="btn-primary timer-create-btn">
+            <span class="btn-icon">&#9203;</span>
+            <span>New Countdown</span>
+          </button>
+          <button id="add-stopwatch-btn" class="btn-secondary timer-create-btn timer-create-btn--stopwatch">
+            <span class="btn-icon">&#9201;</span>
+            <span>New Stopwatch</span>
+          </button>
+        </div>
+        <p id="timers-toolbar-note" class="timers-toolbar-note">No timers armed. Start a countdown or stopwatch to build your board.</p>
+      </section>
+
+      <div id="timers-empty" class="timers-empty">
+        <div>
+          <span class="timers-empty-kicker">Timer Board Ready</span>
+          <h2>No timers yet</h2>
+          <p>Start a countdown for deadlines and check-ins, or launch a stopwatch to track a live task from zero.</p>
+        </div>
+        <div class="timers-empty-pills" aria-hidden="true">
+          <span>Rescue ETA</span>
+          <span>Supply boil time</span>
+          <span>Radio window</span>
+        </div>
+      </div>
+
+      <div id="timers-grid" class="timers-grid">
+        <!-- Rendered by JS -->
+      </div>
     </div>
 
     <!-- Countdown setup modal -->
